@@ -16,11 +16,11 @@
         "spotifyauthlogin": {
           "secretsPathAmplifyAppId": "d4a6gc12kp2rc",
           "deploymentBucketName": "amplify-amplifybdded62a696d4-staging-221034-deployment",
-          "s3Key": "amplify-builds/spotifyauthlogin-7638526d5a386c2b584c-build.zip"
+          "s3Key": "amplify-builds/spotifyauthlogin-3439707835434b664764-build.zip"
         },
         "spotifyauthcallback": {
           "deploymentBucketName": "amplify-amplifybdded62a696d4-staging-221034-deployment",
-          "s3Key": "amplify-builds/spotifyauthcallback-34507762345677784a4a-build.zip",
+          "s3Key": "amplify-builds/spotifyauthcallback-2b77514e5649654b5376-build.zip",
           "secretsPathAmplifyAppId": "d4a6gc12kp2rc"
         }
       }
