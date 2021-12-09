@@ -13,6 +13,8 @@ const { Parameters } = await (new aws.SSM())
 Parameters will be of the form { Name: 'secretName', Value: 'secretValue', ... }[]
 */
 const aws = require('aws-sdk');
+const axios = require('axios');
+const url = require('url');
 
 // GET: /auth/callback
 exports.handler = async (event) => {
@@ -43,11 +45,40 @@ exports.handler = async (event) => {
     json: true
   };
 
-  const response = await (new aws.Request('POST', authOptions)).send();
-  const { access_token } = await response.data;
+  const params = new url.URLSearchParams({
+    code,
+    redirect_uri: 'http://localhost:3000/auth/callback',
+    grant_type: 'authorization_code'
+  });
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ access_token })
-  };
+  try {
+    const response = await axios({
+      method: 'post',
+      url: 'https://accounts.spotify.com/api/token',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: params,
+      responseType: 'json'
+    });
+    console.log(response);
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Headers': '*',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ access_token: response.data.access_token })
+    };
+  } catch (error) {
+    return {
+      statusCode: 400,
+      headers: {
+        'Access-Control-Allow-Headers': '*',
+        'Access-Control-Allow-Origin': '*'
+      },
+    };
+  }
 }

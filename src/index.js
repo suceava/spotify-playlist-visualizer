@@ -1,16 +1,23 @@
+import Amplify from 'aws-amplify';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import Amplify from 'aws-amplify';
+import App from './App';
 import awsconfig from './aws-exports';
+import reportWebVitals from './reportWebVitals';
+import './index.css';
+
 Amplify.configure(awsconfig);
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="auth/callback" element={<App search={window.location.search} />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );
