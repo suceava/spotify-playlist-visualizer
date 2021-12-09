@@ -1,0 +1,29 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-amplifybdded62a696d4-staging-221034-authRole",
+      "UnauthRoleArn": "arn:aws:iam::265927627858:role/amplify-amplifybdded62a696d4-staging-221034-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::265927627858:role/amplify-amplifybdded62a696d4-staging-221034-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-amplifybdded62a696d4-staging-221034-deployment",
+      "UnauthRoleName": "amplify-amplifybdded62a696d4-staging-221034-unauthRole",
+      "StackName": "amplify-amplifybdded62a696d4-staging-221034",
+      "StackId": "arn:aws:cloudformation:us-east-1:265927627858:stack/amplify-amplifybdded62a696d4-staging-221034/aa5dcc80-5873-11ec-b8c2-0e65cf2cb4a1",
+      "AmplifyAppId": "d4a6gc12kp2rc"
+    },
+    "categories": {
+      "function": {
+        "spotifyauthlogin": {
+          "secretsPathAmplifyAppId": "d4a6gc12kp2rc",
+          "deploymentBucketName": "amplify-amplifybdded62a696d4-staging-221034-deployment",
+          "s3Key": "amplify-builds/spotifyauthlogin-7638526d5a386c2b584c-build.zip"
+        },
+        "spotifyauthcallback": {
+          "deploymentBucketName": "amplify-amplifybdded62a696d4-staging-221034-deployment",
+          "s3Key": "amplify-builds/spotifyauthcallback-34507762345677784a4a-build.zip",
+          "secretsPathAmplifyAppId": "d4a6gc12kp2rc"
+        }
+      }
+    }
+  }
+}

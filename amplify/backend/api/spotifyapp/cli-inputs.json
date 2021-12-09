@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "paths": {
+    "/auth/login": {
+      "name": "/auth/login",
+      "lambdaFunction": "spotifyauthlogin",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/auth/callback": {
+      "name": "/auth/callback",
+      "lambdaFunction": "spotifyauthcallback",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}
