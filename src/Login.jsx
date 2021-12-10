@@ -6,12 +6,12 @@ function Login(props) {
   const loginUrl = `${awsconfig.aws_cloud_logic_custom[0].endpoint}/auth/login`;
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <a className="btn-spotify" href={loginUrl} >
-          Login with Spotify 
-        </a>
-      </header>
+    <div className="btn-spotify">
+      <a href={loginUrl} >
+        <div>
+          <span>LOGIN WITH SPOTIFY</span>
+        </div>
+      </a>
     </div>
   );
 }

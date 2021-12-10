@@ -27,7 +27,7 @@ function WebPlayback(props) {
 
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
-          name: 'Web Playback SDK',
+          name: 'Spotify Playlist Visualizer',
           getOAuthToken: cb => { cb(props.token); },
           volume: 0.5
       });
@@ -46,6 +46,7 @@ function WebPlayback(props) {
         if (!state) {
             return;
         }
+        console.log('New player state', state);
     
         setTrack(state.track_window.current_track);
         setPaused(state.paused);

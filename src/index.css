@@ -5,9 +5,36 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #000;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.btn-spotify {
+  margin-top: 20px;
+}
+.btn-spotify a:hover {
+  transition: all .1s;
+  transform: scale(1.08);
+}
+.btn-spotify a:focus {
+  transition: all .1s;
+  transform: scale(1);
+}
+.btn-spotify a {
+  box-sizing: border-box;
+  color: #0000ee;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all .1s;
+  transform: scale(1);
+}
+.btn-spotify a>div {
+  display: flex;
+  align-items: center;
+  background-color: #1ed760;
+  border-radius: 500px;
+  padding: 17px 48px;
 }

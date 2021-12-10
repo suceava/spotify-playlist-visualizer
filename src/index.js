@@ -5,7 +5,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import App from './App';
 import awsconfig from './aws-exports';
+import { Callback } from './Callback';
 import reportWebVitals from './reportWebVitals';
+
 import './index.css';
 
 Amplify.configure(awsconfig);
@@ -15,7 +17,7 @@ ReactDOM.render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="auth/callback" element={<App search={window.location.search} />} />
+        <Route path="auth/callback" element={<Callback />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,
