@@ -18,7 +18,7 @@ function App() {
         window.localStorage.removeItem('callback');
 
         try {
-          const response = await API.get('spotifyapp', `/auth/callback${search}`);
+          const response = await API.get('spotifyapp', `/auth/callback${search}`, null);
           console.log('response', response);
           if (response && response.access_token) {
             setToken(response.access_token);
