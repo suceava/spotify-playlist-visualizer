@@ -18,6 +18,9 @@
     },
     "secretsPathAmplifyAppId": {
       "Type": "String"
+    },
+    "authRedirectUri": {
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -116,6 +119,9 @@
                   "SPOTIFY_CLIENT_SECRET"
                 ]
               ]
+            },
+            "AUTH_REDIRECT_URI": {
+              "Ref": "authRedirectUri"
             }
           }
         },

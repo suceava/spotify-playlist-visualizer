@@ -11,6 +11,7 @@ exports.handler = async (event, context) => {
     })
     .promise();
   const SPOTIFY_CLIENT_ID = Parameters[0].Value;
+  const AUTH_REDIRECT_URI = process.env.AUTH_REDIRECT_URI;
 
   const scope = "streaming user-read-email user-read-private";
   const state = "randomState";
@@ -19,7 +20,7 @@ exports.handler = async (event, context) => {
     response_type: "code",
     client_id: SPOTIFY_CLIENT_ID,
     scope: scope,
-    redirect_uri: "http://localhost:3000/auth/callback",
+    redirect_uri: AUTH_REDIRECT_URI,
     state: state
   });
 

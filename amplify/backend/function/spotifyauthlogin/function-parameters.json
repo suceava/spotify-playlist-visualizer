@@ -3,5 +3,11 @@
   "secretNames": [
     "SPOTIFY_CLIENT_ID",
     "SPOTIFY_CLIENT_SECRET"
+  ],
+  "environmentVariableList": [
+    {
+      "cloudFormationParameterName": "authRedirectUri",
+      "environmentVariableName": "AUTH_REDIRECT_URI"
+    }
   ]
 }

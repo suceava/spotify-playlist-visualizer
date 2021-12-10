@@ -18,7 +18,7 @@ const url = require('url');
 
 // GET: /auth/callback
 exports.handler = async (event) => {
-  console.log('event handler', event);
+  console.log(`EVENT: ${JSON.stringify(event)}`);
 
   const { Parameters } = await (new aws.SSM())
     .getParameters({
@@ -28,26 +28,15 @@ exports.handler = async (event) => {
     .promise();
   const SPOTIFY_CLIENT_ID = Parameters[0].Value;
   const SPOTIFY_CLIENT_SECRET = Parameters[1].Value;
+  const AUTH_REDIRECT_URI = process.env.AUTH_REDIRECT_URI;
 
-  const { code } = event.queryStringParameters;
-
-  const authOptions = {
-    url: 'https://accounts.spotify.com/api/token',
-    form: {
-      code,
-      redirect_uri: 'http://localhost:3000/auth/callback',
-      grant_type: 'authorization_code'
-    },
-    headers: {
-      'Authorization': `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    json: true
+  const corsHeaders = {
+    'Access-Control-Allow-Headers': '*',
+    'Access-Control-Allow-Origin': '*'
   };
-
   const params = new url.URLSearchParams({
-    code,
-    redirect_uri: 'http://localhost:3000/auth/callback',
+    code: event.queryStringParameters.code,
+    redirect_uri: AUTH_REDIRECT_URI,
     grant_type: 'authorization_code'
   });
 
@@ -66,19 +55,14 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: corsHeaders,
       body: JSON.stringify({ access_token: response.data.access_token })
     };
   } catch (error) {
+    // on error return a 400 response
     return {
       statusCode: 400,
-      headers: {
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: corsHeaders,
     };
   }
 }
