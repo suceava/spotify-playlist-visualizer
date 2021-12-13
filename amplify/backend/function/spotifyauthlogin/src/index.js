@@ -13,13 +13,25 @@ exports.handler = async (event, context) => {
   const SPOTIFY_CLIENT_ID = Parameters[0].Value;
   const AUTH_REDIRECT_URI = process.env.AUTH_REDIRECT_URI;
 
-  const scope = "streaming user-read-email user-read-private";
+  const scopes = [
+    "streaming",
+    "user-read-email",
+    "user-read-private",
+    "user-read-playback-state",
+    "user-read-currently-playing",
+    "user-library-read",
+    "user-read-playback-position",
+    "user-top-read",
+    "user-read-recently-played",
+    "playlist-read-collaborative",
+    "playlist-read-private"
+  ];
   const state = "randomState";
 
   const auth_query_parameters = new URLSearchParams({
     response_type: "code",
     client_id: SPOTIFY_CLIENT_ID,
-    scope: scope,
+    scope: scopes.join(" "),
     redirect_uri: AUTH_REDIRECT_URI,
     state: state
   });

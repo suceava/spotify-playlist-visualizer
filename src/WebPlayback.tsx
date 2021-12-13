@@ -12,7 +12,7 @@ const track = {
   ]
 }
 
-function WebPlayback(props: any) {
+function WebPlayback({ token, setToken }: any) {
   const [player, setPlayer] = useState<Spotify.Player | undefined>(undefined);
   const [is_paused, setPaused] = useState(false);
   const [is_active, setActive] = useState(false);
@@ -28,7 +28,7 @@ function WebPlayback(props: any) {
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
           name: 'Spotify Playlist Visualizer',
-          getOAuthToken: (cb: any) => { cb(props.token); },
+          getOAuthToken: (cb: any) => { cb(token); },
           volume: 0.5
       });
 
@@ -40,6 +40,11 @@ function WebPlayback(props: any) {
 
       player.addListener('not_ready', ({ device_id }: any) => {
           console.log('Device ID has gone offline', device_id);
+      });
+
+      player.addListener('authentication_error', ({ message }: any) => {
+        console.error('playback error', message);
+        setToken(null);
       });
 
       player.addListener('player_state_changed', ( async (state: any) => {
@@ -57,7 +62,7 @@ function WebPlayback(props: any) {
 
       player.connect();
     };
-  }, [props.token]);
+  }, [token]);
 
   return (
     <>

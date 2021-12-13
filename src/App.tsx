@@ -1,15 +1,40 @@
 import { API } from 'aws-amplify';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import SpotifyWebApi from 'spotify-web-api-node';
 
 import Login from './Login';
 import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
 
 import './App.css';
+import { PlayerControl } from './player/PlayerControl';
 
 function App() {
   const search = window.localStorage.getItem('callback');
-  const [token, setToken] = useStickyState(null, 'token');
+
+  const [token, setToken] = useStickyState<string | null>(null, 'token');
+  const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
+
+  const setSpotifyApiToken = useCallback(
+    (token: string | null) => {
+      // token = null;
+      const api = token ? new SpotifyWebApi() : null;
+      if (api) {
+        api.setAccessToken(token || '');
+      }
+      setSpotifyApi(api);
+      console.log('setSpotifyApiToken', api);
+    },
+    [ setSpotifyApi]
+  );
+
+  const setAuthToken = useCallback(
+    (token: string | null) => {
+      setToken(token);
+      setSpotifyApiToken(token);
+    },
+    [setToken, setSpotifyApiToken]
+  );
 
   useEffect(() => {
     async function fetchToken() {
@@ -19,24 +44,37 @@ function App() {
 
         try {
           const response = await API.get('spotifyapp', `/auth/callback${search}`, null);
-          console.log('response', response);
           if (response && response.access_token) {
-            setToken(response.access_token);
+            setAuthToken(response.access_token);
           }
         } catch (e) {
           // error getting token => clear out token from state
           console.error('error', e);
-          setToken(null);
+          setAuthToken(null);
         }
+      } else {
+        setSpotifyApiToken(token);
       }
     }
     fetchToken();
-  }, [search, setToken]);
+  }, [search, token, setAuthToken, setSpotifyApiToken]);
 
   return (
     <div className="App">
-      { !token && <Login /> }
-      { token && <WebPlayback token={token} />}
+      <div className="app-grid">
+        <div className="app-header">
+          { !token && <Login /> }
+        </div>
+        <div className="app-sidebar">
+          SIDEBAR
+        </div>
+        <div className="app-content">
+          { token && <WebPlayback token={token} setToken={setAuthToken} />}
+        </div>
+        <div className="app-footer">
+          { spotifyApi && <PlayerControl spotifyApi={spotifyApi} />}
+        </div>
+      </div>
     </div>
   );
 }

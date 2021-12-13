@@ -1,0 +1,9 @@
+.player {
+  display: flex;
+  flex-direction: row;
+}
+
+.player-info-cover {
+  height: 56px;
+  width: 56px;
+}

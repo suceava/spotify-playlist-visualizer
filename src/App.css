@@ -1,5 +1,46 @@
+.root,
+.App,
+.app-grid {
+  height: 100%;
+  min-height: 100%;
+  width: 100%;
+  min-width: 100%;
+}
+
 .App {
   text-align: center;
+  color: #333;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar content"
+    "footer footer";
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: 100px 1fr 100px;
+  width: 100vw;
+  height: 100vh;
+}
+.app-header {
+  grid-area: header;
+  z-index: 4;
+}
+.app-sidebar {
+  grid-area: sidebar;
+}
+.app-content {
+  grid-area: content;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: scroll;
+}
+.app-footer {
+  grid-area: footer;
+  width: 100%;
+  z-index: 10;
 }
 
 
