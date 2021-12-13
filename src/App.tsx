@@ -1,5 +1,6 @@
 import { API } from 'aws-amplify';
 import { useCallback, useEffect, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary'
 import SpotifyWebApi from 'spotify-web-api-node';
 
 import Login from './Login';
@@ -14,10 +15,10 @@ function App() {
 
   const [token, setToken] = useStickyState<string | null>(null, 'token');
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
+  const [playbackState, setPlaybackState ] = useState<any>(null);
 
   const setSpotifyApiToken = useCallback(
     (token: string | null) => {
-      // token = null;
       const api = token ? new SpotifyWebApi() : null;
       if (api) {
         api.setAccessToken(token || '');
@@ -59,6 +60,44 @@ function App() {
     fetchToken();
   }, [search, token, setAuthToken, setSpotifyApiToken]);
 
+  let fetchTimer: any;
+
+  async function fetchData(state: any) {
+    let progressMs = 0, durationMs = 0;
+    let currentState: any = null;
+    let timeoutInterval = 10000;
+
+    if (!spotifyApi) {
+      return;
+    }
+
+    if (state && state.body) {
+      progressMs = state.body.progress_ms;
+      durationMs = state.body.item?.duration_ms || 0;
+    }
+
+    if (durationMs > 0 && (durationMs - progressMs) < timeoutInterval) {
+      timeoutInterval = durationMs - progressMs + 10;
+      console.log(`Timeout interval set to ${timeoutInterval}`);
+    }
+
+    try {
+      currentState = await spotifyApi.getMyCurrentPlaybackState();
+      console.log("current playback", currentState);
+    } catch (error) {
+      console.error("Error fetching data", error);
+      currentState = null;
+      timeoutInterval = 30000;
+    }
+    setPlaybackState(currentState);
+
+    fetchTimer = setTimeout(() => fetchData(currentState), timeoutInterval);
+  }
+
+  useEffect(() => {
+    fetchData(playbackState);
+  }, [spotifyApi]);
+
   return (
     <div className="App">
       <div className="app-grid">
@@ -72,7 +111,11 @@ function App() {
           { token && <WebPlayback token={token} setToken={setAuthToken} />}
         </div>
         <div className="app-footer">
-          { spotifyApi && <PlayerControl spotifyApi={spotifyApi} />}
+          { spotifyApi && 
+            <ErrorBoundary FallbackComponent={() => (<div>Error</div>)}>
+              <PlayerControl playbackState={playbackState} />
+            </ErrorBoundary>
+          }
         </div>
       </div>
     </div>
