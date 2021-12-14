@@ -15,6 +15,7 @@ export function Sidebar({ currentPlaylistId, playlistMap }: SidebarProps) {
           <img src={playlist.images[0].url} />
           <div className="sidebar-playlist-info-text">
             <h2>{playlist.name}</h2>
+            <p>{`${playlist.tracks.items.length} tracks`}</p>
           </div>
         </div>
       }

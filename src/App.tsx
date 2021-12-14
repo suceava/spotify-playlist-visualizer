@@ -6,11 +6,12 @@ import SpotifyWebApi from 'spotify-web-api-node';
 import Login from './Login';
 import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
-
-import './App.css';
 import { PlayerControl } from './player/PlayerControl';
 import { ShuffleAnalyzer } from './analyzer/ShuffleAnalyzer';
 import { Sidebar } from './sidebar/Sidebar';
+import { getCurrentPlaybackState, getPlaylist, getPlaylistTracks } from './spotify/spotifyApi';
+
+import './App.css';
 
 function App() {
   const search = window.localStorage.getItem('callback');
@@ -84,15 +85,12 @@ function App() {
     }
 
     try {
-      const response = await spotifyApi.getMyCurrentPlaybackState();
-      currentState = response.body;
-      console.log("current playback", currentState);
+      currentState = await getCurrentPlaybackState(spotifyApi);
     } catch (error: any) {
-      console.error("Error fetching data", error.message);
-      currentState = null;
-      if (error.message.includes("Details: The access token expired.")) {
+      if (error.message.includes("The access token expired.")) {
         setAuthToken(null);
       }
+      currentState = null;
       timeoutInterval = 30000;
     }
     setPlaybackState(currentState);
@@ -106,52 +104,34 @@ function App() {
     fetchTimer = setTimeout(() => fetchCurrentPlaybackState(currentState), timeoutInterval);
   }
   async function fetchPlaylist(playlistId: string) {
-    if (!spotifyApi || !playlistId) {
+    if (!spotifyApi || !playlistId || playlistMap.has(playlistId)) {
       return;
     }
 
-    if (!playlistMap.has(playlistId)) {
-      // fetch playlist
-      try {
-        const response = await spotifyApi.getPlaylist(playlistId);
-        const playlistData = response.body;
-        console.log("playlist", playlistData);
-        if (playlistData) {
-          setPlaylistMap(playlistMap.set(playlistId, playlistData));
-          fetchPlaylistTracks(playlistId);
-        }
-      } catch (error: any) {
-        console.error("Error fetching data", error.message);
-      }
+    // fetch playlist
+    let playlist = await getPlaylist(spotifyApi, playlistId, false);
+    if (playlist) {
+      // update state with playlist before fetching tracks
+      setPlaylistMap(playlistMap.set(playlistId, playlist));
+      // fetch tracks
+      playlist = await getPlaylistTracks(spotifyApi, playlist);
+      setPlaylistMap(playlistMap.set(playlistId, playlist));
     }
   }
   async function fetchPlaylistTracks(playlistId: string) {
     if (!spotifyApi || !playlistId || !playlistMap.has(playlistId)) {
       return;
     }
-    const playlist = playlistMap.get(playlistId);
+    let playlist = playlistMap.get(playlistId);
     if (playlist.tracks.total <= playlist.tracks.items.length) {
       // already have all the tracks
       return;
     }
 
-    // the first 100 tracks are always included in the response, so we need to fetch the rest
-    try {
-      while (playlist.tracks.items.length < playlist.tracks.total) {
-        console.log("fetching more tracks", playlist.tracks.items.length, playlist.tracks.total);
-        const response = await spotifyApi.getPlaylistTracks(playlistId, {
-          offset: playlist.tracks.items.length,
-          limit: 100,
-        });
-        const tracks = response.body.items;
-        console.log("tracks", tracks);
-        if (tracks) {
-          playlist.tracks.items = playlist.tracks.items.concat(tracks);
-        }
-      }
+    // fetch more tracks
+    playlist = await getPlaylistTracks(spotifyApi, playlist);
+    if (playlist) {
       setPlaylistMap(playlistMap.set(playlistId, playlist));
-    } catch (error: any) {
-      console.error("Error fetching data", error.message);
     }
   }
 
