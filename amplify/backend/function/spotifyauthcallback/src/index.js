@@ -56,7 +56,11 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify({ access_token: response.data.access_token })
+      body: JSON.stringify({
+        access_token: response.data.access_token,
+        refresh_token: response.data.refresh_token,
+        expires_in: response.data.expires_in
+      })
     };
   } catch (error) {
     // on error return a 400 response

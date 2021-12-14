@@ -19,7 +19,7 @@
     "sidebar content"
     "footer footer";
   grid-template-columns: 200px 1fr;
-  grid-template-rows: 100px 1fr 100px;
+  grid-template-rows: 64px 1fr 90px;
   width: 100vw;
   height: 100vh;
 }
@@ -31,9 +31,10 @@
   grid-area: sidebar;
 }
 .app-content {
-  grid-area: content;
+  background-color: #111111;
   display: flex;
   flex-direction: column;
+  grid-area: content;
   position: relative;
   overflow-y: auto;
 }

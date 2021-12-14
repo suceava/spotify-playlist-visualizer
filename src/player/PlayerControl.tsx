@@ -10,12 +10,12 @@ function formatTime(ms: number) {
 }
 
 export function PlayerControl({ playbackState }: any) {
-  const progress_ms = playbackState?.body?.progress_ms || 0;
+  const progress_ms = playbackState?.progress_ms || 0;
   const [progressMs, setProgressMs] = useState<number>(progress_ms);
   
   function onProgress(progressMs: number, timestamp: number) {
     let newProgressMs = progressMs + (new Date().getTime() - timestamp);
-    const durationMs = playbackState?.body?.item?.duration_ms || 0;
+    const durationMs = playbackState?.item?.duration_ms || 0;
     if (newProgressMs > durationMs) {
       newProgressMs = durationMs;
     }
@@ -24,14 +24,14 @@ export function PlayerControl({ playbackState }: any) {
 
   useEffect(() => {
     let interval: any;
-    if (playbackState && playbackState.body) {
-      if (playbackState.body.is_playing) {
+    if (playbackState) {
+      if (playbackState.is_playing) {
         // device playing => start interval
         const timestamp = new Date().getTime();
-        interval = setInterval(() => onProgress(playbackState.body.progress_ms, timestamp), 1000);
+        interval = setInterval(() => onProgress(playbackState.progress_ms, timestamp), 1000);
       } else {
         // device not playing => keep given progress
-        setProgressMs(playbackState.body.progress_ms);
+        setProgressMs(playbackState.progress_ms);
       }
     }
     return () => {
@@ -39,19 +39,17 @@ export function PlayerControl({ playbackState }: any) {
     }
   }, [playbackState]);
 
-  if (!playbackState || !playbackState.body) {
+  if (!playbackState) {
     return <div>Loading...</div>;
   }
 
   const {
-    body: {
-      item
-    } = {} as any
+    item
   } = playbackState || {};
 
   return (
     <div className="player">
-      { playbackState && playbackState.body &&
+      { playbackState &&
         <>
           <div className="player-info">
             <div className="player-info-cover">
@@ -62,7 +60,7 @@ export function PlayerControl({ playbackState }: any) {
                 {item.name}
               </div>
               <div className="player-info-details-artist">
-                {item.artists[0].name}
+                {item.artists.map((a: any) => a.name).join(', ')}
               </div>
             </div>
           </div>

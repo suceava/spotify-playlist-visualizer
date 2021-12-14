@@ -1,0 +1,14 @@
+.sidebar {
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+.sidebar img{
+  height: 175px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  width: 175px;
+}
