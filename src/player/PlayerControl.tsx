@@ -9,6 +9,22 @@ function formatTime(ms: number) {
   return `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
 }
 
+function renderPlay() {
+  return (
+    <svg role="img" height="16" width="16" viewBox="0 0 16 16">
+      <path d="M4.018 14L14.41 8 4.018 2z"></path>
+    </svg>
+  );
+}
+function renderPause() {
+  return (
+    <svg role="img" height="16" width="16" viewBox="0 0 16 16">
+      <path fill="none" d="M0 0h16v16H0z"></path>
+      <path d="M3 2h3v12H3zm7 0h3v12h-3z"></path>
+    </svg>
+  );
+}
+
 export function PlayerControl({ playbackState }: any) {
   const progress_ms = playbackState?.progress_ms || 0;
   const [progressMs, setProgressMs] = useState<number>(progress_ms);
@@ -65,6 +81,11 @@ export function PlayerControl({ playbackState }: any) {
             </div>
           </div>
           <div className="player-controls">
+            <div className="player-controls-buttons">
+              <button onClick={() => console.log('toggle')}>
+                { playbackState.is_playing ? renderPause() : renderPlay() }
+              </button>
+            </div>
             <div className="player-controls-progress">
               <div className="player-controls-progress-elapsed">
                 {formatTime(progressMs)}

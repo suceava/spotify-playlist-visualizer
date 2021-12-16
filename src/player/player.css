@@ -42,8 +42,33 @@
 .player-controls {
   align-items: center;
   display: flex;
+  flex-direction: column;
   width: 40%;
 }
+
+.player-controls-buttons {
+  margin-bottom: 10px;
+}
+.player-controls-buttons button {
+  align-items: center;
+  background-color: #fff;
+  border: none;
+  border-radius: 50%;
+  color: #000;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+.player-controls-buttons button:hover {
+  transition: all .1s;
+  transform: scale(1.08);
+}
+.player-controls-buttons button:focus {
+  transition: all .1s;
+  transform: scale(1);
+}
+
 .player-controls-progress {
   align-items: center;
   display: flex;

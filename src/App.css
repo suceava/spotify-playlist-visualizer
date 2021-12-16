@@ -1,3 +1,21 @@
+.App ::-webkit-scrollbar-button:single-button:vertical:increment {
+  background-color: #fff;
+}
+.App ::-webkit-scrollbar-button:single-button:vertical:decrement {
+  background-color: #fff;
+}
+.App ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, .3);
+  border-radius: 5px;
+  width: 8px;
+}
+.App ::-webkit-scrollbar-track {
+  color: black;
+}
+.App ::-webkit-scrollbar {
+  width: 8px;
+}
+
 .root,
 .App,
 .app-grid {
