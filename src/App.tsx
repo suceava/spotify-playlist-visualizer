@@ -20,7 +20,6 @@ function App() {
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
   const [playbackState, setPlaybackState ] = useState<any>(null);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
-  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
 
@@ -28,7 +27,11 @@ function App() {
     (token: string | null) => {
       const api = spotifyApi ? spotifyApi : (token ? new SpotifyWebApi() : null);
       if (api) {
-        api.setAccessToken(token || '');
+        if (token) {
+          api.setAccessToken(token);
+        } else {
+          api.resetAccessToken();
+        }
       }
       setSpotifyApi(api);
     },
@@ -49,7 +52,9 @@ function App() {
         clearInterval(fetchTimer);
       }
       setAuthToken(null);
-    }, []
+      setPlaybackState(null);
+      setCurrentPlaylist(null);
+    }, [fetchTimer]
   );
 
   useEffect(() => {
@@ -107,7 +112,6 @@ function App() {
 
     if (currentState?.context?.type === "playlist") {
       const playlistId = currentState.context.uri.split(":")[2];
-      setCurrentPlaylistId(playlistId);
       fetchPlaylist(playlistId);
     }
 
@@ -133,7 +137,9 @@ function App() {
   }
 
   useEffect(() => {
-    fetchCurrentPlaybackState(playbackState);
+    if (spotifyApi && token && !fetchTimer) {
+      fetchCurrentPlaybackState(playbackState);
+    }
     return () => {
       if (fetchTimer) {
         clearTimeout(fetchTimer);

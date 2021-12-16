@@ -44,4 +44,19 @@
 
 .header-logout {
   align-items: center;
+  display: flex;
+  height: 100%;
+}
+.header-logout button {
+  background-color: #500;
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  padding: 8px 16px;
+}
+.header-logout button:hover {
+  background-color: #700;
+  cursor: pointer;
+  transition: all .1s;
+  transform: scale(1.08);
 }
