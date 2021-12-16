@@ -7,7 +7,7 @@ import { Header } from './header/Header';
 import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
 import { PlayerControl } from './player/PlayerControl';
-import { ShuffleAnalyzer } from './analyzer/ShuffleAnalyzer';
+import { Analyzer } from './analyzer/Analyzer';
 import { Sidebar } from './sidebar/Sidebar';
 import { getCurrentPlaybackState, getPlaylist, getPlaylistTracks } from './spotify/spotifyApi';
 
@@ -158,7 +158,7 @@ function App() {
         </div>
         <div className="app-content">
           { playbackState && currentPlaylist &&
-            <ShuffleAnalyzer playbackState={playbackState} playlist={currentPlaylist} />
+            <Analyzer playbackState={playbackState} playlist={currentPlaylist} />
           }
           { token && <WebPlayback token={token} setToken={setAuthToken} />}
         </div>

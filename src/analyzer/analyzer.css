@@ -1,10 +1,16 @@
-.shuffle-analyzer {
-  background-color: #111111;
+.analyzer {
+  /* background-color: #111111; */
   color: #fff;
   display: flex;
   flex-direction: column;
-  font-size: 45px;
   height: 100%;
+  width: 100%;
+}
+
+.shuffle-analyzer {
+  display: flex;
+  flex-direction: column;
+  font-size: 45px;
   width: 100%;
 }
 .shuffle-analyzer img{
@@ -14,4 +20,20 @@
 
 .shuffle-analyzer-shuffle-distribution {
   width: 100%;
+}
+
+.shuffle-visualizer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.shuffle-visualizer>div {
+  padding: 25px 0;
+}
+
+.shape {
+  background-color: red;
+  width: 50px;
+  height: 50px;
 }

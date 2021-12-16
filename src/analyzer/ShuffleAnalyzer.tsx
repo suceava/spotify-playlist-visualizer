@@ -1,62 +1,28 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts';
 
-import { useStickyState } from '../stickyState';
+import { ScatterData } from './scatterData';
 
 import './analyzer.css';
 
-export interface ShuffleAnalyzerProps {
-  playbackState: any;
-  playlist: any;
+interface ShuffleAnalyzerProps {
+  playlistTrackCount: number;
+  scatterData: ScatterData[];
 }
 
-interface ScatterData {
-  index: number;
-  y: number;
-  count: number;
-  timestamp: Date;
-}
+export function ShuffleAnalyzer({ playlistTrackCount, scatterData }: ShuffleAnalyzerProps) {
 
-export function ShuffleAnalyzer({ playbackState, playlist }: ShuffleAnalyzerProps) {
-  const playlistTrackCount = playlist?.tracks?.items?.length || 0;
-
-  const [scatterData, setScatterData] = useStickyState<ScatterData[]>([], 'scatterData');
-  const [lastTrackIndex, setLastTrackIndex] = useStickyState<number>(-1, 'lastTrackIndex');
-
-  let trackIndex = -1;
-  useEffect(() => {
-    const track = playbackState.item;
-    if (track && playlist) {
-      trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
-      console.log(`trackIndex: ${trackIndex}  lastTrackIndex: ${lastTrackIndex}`);
-      if (trackIndex !== lastTrackIndex) {
-        const data = scatterData[trackIndex];
-        if (data) {
-          data.count += 1;
-        } else {
-          scatterData[trackIndex] = {
-            index: trackIndex,
-            y: 1,
-            count: 1,
-            timestamp: new Date()
-          };
-        }
-        setLastTrackIndex(trackIndex);
-        setScatterData(scatterData);
-      }
-    }
-  }, [playbackState, playlist]);
 
   return (
     <div className="shuffle-analyzer">
       { playlistTrackCount > 0 && 
         <div className="shuffle-analyzer-shuffle-distribution">
           <ResponsiveContainer width="100%" height={100}>
-            <ScatterChart width={50}>
+            <ScatterChart width={50} margin={{left: 10, right: 10}}>
               <XAxis
                 type="number"
-                dataKey="index"
-                domain={[0, playlistTrackCount]}
+                dataKey="trackIndex"
+                domain={[1, playlistTrackCount]}
                 interval={0}
                 tick={{ fontSize: 8 }}
                 padding={{left: 20, right: 20}}
@@ -68,9 +34,6 @@ export function ShuffleAnalyzer({ playbackState, playlist }: ShuffleAnalyzerProp
           </ResponsiveContainer>
         </div>
       }
-      <div>
-        {trackIndex}
-      </div>
     </div>
   );
 }
