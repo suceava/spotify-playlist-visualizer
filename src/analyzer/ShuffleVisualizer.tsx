@@ -1,6 +1,6 @@
 import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts';
 
-import { ScatterData, getScatterDataCount } from './scatterData';
+import { ScatterData, getScatterDataCount } from '../data/scatterData';
 import { ShuffleVisualizerShape } from './ShuffleVisualizerShape';
 
 import './analyzer.css';
@@ -14,7 +14,7 @@ export function ShuffleVisualizer({ playlistTrackCount, scatterData }: ShuffleVi
   const scatterDataCount = getScatterDataCount(scatterData);
 
   return (
-    <div className="shuffle-visualizer" style={{height: scatterDataCount*56}}>
+    <div className="shuffle-visualizer" style={{height: Math.min(1, scatterDataCount)*56}}>
       { playlistTrackCount > 0 && 
         <ResponsiveContainer width="100%">
           <ScatterChart margin={{top: 27, bottom: 27, right: 20}}>

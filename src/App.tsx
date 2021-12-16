@@ -6,8 +6,9 @@ import SpotifyWebApi from 'spotify-web-api-node';
 import { Header } from './header/Header';
 import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
-import { PlayerControl } from './player/PlayerControl';
 import { Analyzer } from './analyzer/Analyzer';
+import { PlaylistData } from './data/playlistData';
+import { PlayerControl } from './player/PlayerControl';
 import { Sidebar } from './sidebar/Sidebar';
 import { getCurrentPlaybackState, getPlaylist, getPlaylistTracks } from './spotify/spotifyApi';
 
@@ -17,11 +18,15 @@ function App() {
   const search = window.localStorage.getItem('callback');
 
   const [token, setToken] = useStickyState<string | null>(null, 'token');
+  const [playlistData, setPlaylistData] = useStickyState<PlaylistData[]>([], 'playlistData');
+  const [lastPlaylistDataName, setLastPlaylistDataName] = useStickyState<string>('', 'lastPlaylistDataName');
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
   const [playbackState, setPlaybackState ] = useState<any>(null);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
+  const [lastPlaylistId, setLastPlaylistId] = useState<string | null>(null);
+  const [currentPlaylistData, setCurrentPlaylistData] = useState<PlaylistData | undefined>(undefined);
 
   const setSpotifyApiToken = useCallback(
     (token: string | null) => {
@@ -50,10 +55,12 @@ function App() {
     () => {
       if (fetchTimer) {
         clearInterval(fetchTimer);
+        setFetchTimer(null);
       }
       setAuthToken(null);
       setPlaybackState(null);
       setCurrentPlaylist(null);
+      setCurrentPlaylistData(undefined);
     }, [fetchTimer]
   );
 
@@ -147,6 +154,45 @@ function App() {
     };
   }, [spotifyApi]);
 
+  useEffect(() => {
+    if (!playbackState || !currentPlaylist) {
+      return;
+    }
+
+    let currentData = currentPlaylistData;
+    if (!currentData) {
+      // get the playlist data by the last name used
+      currentData = playlistData.find(data => data.name === lastPlaylistDataName);
+      if (!currentData || currentData.playlist.id !== currentPlaylist.id) {
+        // new playlist analysis
+        currentData = {
+          name: `${currentPlaylist.name} ${new Date().toLocaleString()}`,
+          playlist: currentPlaylist,
+          scatterData: [],
+          timestamp: new Date()
+        };
+        playlistData.push(currentData);
+        setPlaylistData(Array.from(playlistData));
+        setLastPlaylistDataName(currentData.name);
+      }
+      setCurrentPlaylistData(currentData);
+    } else {
+      if (currentData.playlist.id !== currentPlaylist.id) {
+        // playlist changed => new playlist analysis
+        currentData = {
+          name: `${currentPlaylist.name} ${new Date().toLocaleString()}`,
+          playlist: currentPlaylist,
+          scatterData: [],
+          timestamp: new Date()
+        };
+        playlistData.push(currentData);
+        setPlaylistData(Array.from(playlistData));
+        setLastPlaylistDataName(currentData.name);
+        setCurrentPlaylistData(currentData);
+      }
+    }
+  }, [playbackState, currentPlaylist]);
+
   return (
     <div className="App">
       <div className="app-grid">
@@ -157,8 +203,14 @@ function App() {
           <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} />
         </div>
         <div className="app-content">
-          { playbackState && currentPlaylist &&
-            <Analyzer playbackState={playbackState} playlist={currentPlaylist} />
+          { playbackState && currentPlaylist && currentPlaylistData &&
+            <Analyzer
+              playbackState={playbackState}
+              playlist={currentPlaylist}
+              currentData={currentPlaylistData}
+              playlistData={playlistData}
+              setPlaylistData={setPlaylistData}
+            />
           }
           { token && <WebPlayback token={token} setToken={setAuthToken} />}
         </div>
