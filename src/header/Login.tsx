@@ -1,8 +1,8 @@
-import React from 'react';
+import awsconfig from '../aws-exports';
 
-import awsconfig from './aws-exports';
+import './header.css';
 
-function Login() {
+export function Login() {
   const loginUrl = `${awsconfig.aws_cloud_logic_custom[0].endpoint}/auth/login`;
 
   return (
@@ -15,5 +15,3 @@ function Login() {
     </div>
   );
 }
-
-export default Login;

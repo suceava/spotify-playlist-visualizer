@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary'
 import SpotifyWebApi from 'spotify-web-api-node';
 
-import Login from './Login';
+import { Header } from './header/Header';
 import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
 import { PlayerControl } from './player/PlayerControl';
@@ -21,10 +21,12 @@ function App() {
   const [playbackState, setPlaybackState ] = useState<any>(null);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
+  const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
 
   const setSpotifyApiToken = useCallback(
     (token: string | null) => {
-      const api = token ? new SpotifyWebApi() : null;
+      const api = spotifyApi ? spotifyApi : (token ? new SpotifyWebApi() : null);
       if (api) {
         api.setAccessToken(token || '');
       }
@@ -35,10 +37,19 @@ function App() {
 
   const setAuthToken = useCallback(
     (token: string | null) => {
-      setToken(token);
       setSpotifyApiToken(token);
+      setToken(token);
     },
     [setToken, setSpotifyApiToken]
+  );
+
+  const logOut = useCallback(
+    () => {
+      if (fetchTimer) {
+        clearInterval(fetchTimer);
+      }
+      setAuthToken(null);
+    }, []
   );
 
   useEffect(() => {
@@ -64,7 +75,6 @@ function App() {
     fetchToken();
   }, [search, token, setAuthToken, setSpotifyApiToken]);
 
-  let fetchTimer: any;
   async function fetchCurrentPlaybackState(state: any) {
     let progressMs = 0, durationMs = 0;
     let currentState: any = null;
@@ -101,7 +111,8 @@ function App() {
       fetchPlaylist(playlistId);
     }
 
-    fetchTimer = setTimeout(() => fetchCurrentPlaybackState(currentState), timeoutInterval);
+    const timer = setTimeout(() => fetchCurrentPlaybackState(currentState), timeoutInterval);
+    setFetchTimer(timer);
   }
   async function fetchPlaylist(playlistId: string) {
     if (!spotifyApi || !playlistId || playlistMap.has(playlistId)) {
@@ -113,44 +124,35 @@ function App() {
     if (playlist) {
       // update state with playlist before fetching tracks
       setPlaylistMap(playlistMap.set(playlistId, playlist));
+      setCurrentPlaylist(playlist);
       // fetch tracks
       playlist = await getPlaylistTracks(spotifyApi, playlist);
       setPlaylistMap(playlistMap.set(playlistId, playlist));
-    }
-  }
-  async function fetchPlaylistTracks(playlistId: string) {
-    if (!spotifyApi || !playlistId || !playlistMap.has(playlistId)) {
-      return;
-    }
-    let playlist = playlistMap.get(playlistId);
-    if (playlist.tracks.total <= playlist.tracks.items.length) {
-      // already have all the tracks
-      return;
-    }
-
-    // fetch more tracks
-    playlist = await getPlaylistTracks(spotifyApi, playlist);
-    if (playlist) {
-      setPlaylistMap(playlistMap.set(playlistId, playlist));
+      setCurrentPlaylist(playlist);
     }
   }
 
   useEffect(() => {
     fetchCurrentPlaybackState(playbackState);
+    return () => {
+      if (fetchTimer) {
+        clearTimeout(fetchTimer);
+      }
+    };
   }, [spotifyApi]);
 
   return (
     <div className="App">
       <div className="app-grid">
         <div className="app-header">
-          { !token && <Login /> }
+          <Header token={token} logOut={logOut} />
         </div>
         <div className="app-sidebar">
-          <Sidebar currentPlaylistId={currentPlaylistId} playlistMap={playlistMap} />
+          <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} />
         </div>
         <div className="app-content">
-          { playbackState &&
-            <ShuffleAnalyzer playbackState={playbackState} playlistMap={playlistMap} />
+          { playbackState && currentPlaylist &&
+            <ShuffleAnalyzer playbackState={playbackState} playlist={currentPlaylist} />
           }
           { token && <WebPlayback token={token} setToken={setAuthToken} />}
         </div>

@@ -7,7 +7,7 @@ import './analyzer.css';
 
 export interface ShuffleAnalyzerProps {
   playbackState: any;
-  playlistMap: Map<string, any>;
+  playlist: any;
 }
 
 interface ScatterData {
@@ -17,10 +17,7 @@ interface ScatterData {
   timestamp: Date;
 }
 
-export function ShuffleAnalyzer({ playbackState, playlistMap }: ShuffleAnalyzerProps) {
-  const playlistId = playbackState.context.uri.split(":")[2];
-  const playlist = playlistMap.get(playlistId);
-  console.log('playlist', playlist);
+export function ShuffleAnalyzer({ playbackState, playlist }: ShuffleAnalyzerProps) {
   const playlistTrackCount = playlist?.tracks?.items?.length || 0;
 
   const [scatterData, setScatterData] = useStickyState<ScatterData[]>([], 'scatterData');
@@ -31,6 +28,7 @@ export function ShuffleAnalyzer({ playbackState, playlistMap }: ShuffleAnalyzerP
     const track = playbackState.item;
     if (track && playlist) {
       trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
+      console.log(`trackIndex: ${trackIndex}  lastTrackIndex: ${lastTrackIndex}`);
       if (trackIndex !== lastTrackIndex) {
         const data = scatterData[trackIndex];
         if (data) {
@@ -47,7 +45,7 @@ export function ShuffleAnalyzer({ playbackState, playlistMap }: ShuffleAnalyzerP
         setScatterData(scatterData);
       }
     }
-  }, [playbackState]);
+  }, [playbackState, playlist]);
 
   return (
     <div className="shuffle-analyzer">

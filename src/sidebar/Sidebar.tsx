@@ -1,21 +1,20 @@
 import './sidebar.css';
 
 export interface SidebarProps {
-  currentPlaylistId: string | null;
+  currentPlaylist: any;
   playlistMap: Map<string, any>;
 }
 
-export function Sidebar({ currentPlaylistId, playlistMap }: SidebarProps) {
-  const playlist = currentPlaylistId ? playlistMap.get(currentPlaylistId) : null;
+export function Sidebar({ currentPlaylist, playlistMap }: SidebarProps) {
 
   return (
     <div className="sidebar">
-      {playlist && 
+      {currentPlaylist && 
         <div className="sidebar-playlist-info">
-          <img src={playlist.images[0].url} />
+          <img src={currentPlaylist.images[0].url} />
           <div className="sidebar-playlist-info-text">
-            <h2>{playlist.name}</h2>
-            <p>{`${playlist.tracks.items.length} tracks`}</p>
+            <h2>{currentPlaylist.name}</h2>
+            <p>{`${currentPlaylist.tracks.items.length} tracks`}</p>
           </div>
         </div>
       }
