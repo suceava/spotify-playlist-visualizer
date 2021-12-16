@@ -17,13 +17,11 @@ export function ShuffleVisualizer({ playlistTrackCount, scatterData }: ShuffleVi
     <div className="shuffle-visualizer" style={{height: scatterDataCount*56}}>
       { playlistTrackCount > 0 && 
         <ResponsiveContainer width="100%">
-          <ScatterChart width={50} margin={{top: 27, bottom: 27, left: 10, right: 10}}>
+          <ScatterChart margin={{top: 27, bottom: 27, right: 20}}>
             <XAxis
               type="number"
               dataKey="trackIndex"
               domain={[1, playlistTrackCount]}
-              interval={0}
-              tick={{ fontSize: 8 }}
               padding={{left: 20, right: 20}}
               hide={true}
             />
@@ -31,8 +29,10 @@ export function ShuffleVisualizer({ playlistTrackCount, scatterData }: ShuffleVi
               type="number"
               dataKey="playIndex"
               domain={['dataMin', 'dataMax']}
-              reversed={true}
-              hide={true}
+              interval={0}
+              tickCount={scatterDataCount}
+              axisLine={false}
+              tickLine={false}
             />
             <Scatter data={scatterData} fill="#1cb954" shape={<ShuffleVisualizerShape/>} />
           </ScatterChart>

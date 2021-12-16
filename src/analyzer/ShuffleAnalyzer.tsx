@@ -18,16 +18,24 @@ export function ShuffleAnalyzer({ playlistTrackCount, scatterData }: ShuffleAnal
       { playlistTrackCount > 0 && 
         <div className="shuffle-analyzer-shuffle-distribution">
           <ResponsiveContainer width="100%" height={100}>
-            <ScatterChart width={50} margin={{left: 10, right: 10}}>
+            <ScatterChart margin={{right: 20}}>
               <XAxis
                 type="number"
                 dataKey="trackIndex"
                 domain={[1, playlistTrackCount]}
                 interval={0}
                 tick={{ fontSize: 8 }}
+                tickCount={playlistTrackCount}
                 padding={{left: 20, right: 20}}
               />
-              <YAxis type="number" dataKey="y" hide={true} domain={[1, 1]} />
+              <YAxis
+                type="number"
+                dataKey="y"
+                domain={[1, 1]}
+                axisLine={false}
+                tickLine={false}
+                tick={false}
+              />
               <ZAxis type="number" dataKey="count" range={[50,50]} />
               <Scatter data={scatterData} fill="#1cb954" />
             </ScatterChart>
