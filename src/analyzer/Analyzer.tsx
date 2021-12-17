@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import { ScatterData, updateScatterData } from '../data/scatterData';
+import { updateScatterData } from '../data/scatterData';
 import { ShuffleAnalyzer } from './ShuffleAnalyzer';
 import { ShuffleVisualizer } from './ShuffleVisualizer';
-import { useStickyState } from '../stickyState';
+import { PlaybackState } from '../data/playbackState';
 import { PlaylistData } from '../data/playlistData';
 
 import './analyzer.css';
@@ -12,24 +12,28 @@ interface AnalyzerProps {
   currentData: PlaylistData;
   setPlaylistData: React.Dispatch<React.SetStateAction<PlaylistData[]>>;
   playlistData: PlaylistData[];
-  playbackState: any;
+  playbackState: PlaybackState;
   playlist: any;
 }
 
-export function Analyzer({ playbackState, playlist, currentData, setPlaylistData, playlistData }: AnalyzerProps) {
+export function Analyzer({
+  playbackState,
+  playlist,
+  currentData,
+  setPlaylistData,
+  playlistData
+}: AnalyzerProps) {
   const playlistTrackCount = playlist?.tracks?.items?.length || 0;
   const { scatterData } = currentData;
 
-  const [lastTrackIndex, setLastTrackIndex] = useStickyState<number>(-1, 'lastTrackIndex');
-
   useEffect(() => {
-    const track = playbackState.item;
+    console.log('Analyzer: useEffect', playbackState.hasTrackChanged, playbackState.hasPlaylistChanged);
+    const track = playbackState.playback.item;
     if (track && playlist) {
       const trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
-      if (trackIndex !== lastTrackIndex) {
+      if (playbackState.hasTrackChanged) {
         updateScatterData(scatterData, trackIndex, track);
         currentData.scatterData = scatterData;
-        setLastTrackIndex(trackIndex);
         setPlaylistData(Array.from(playlistData));
       }
     }

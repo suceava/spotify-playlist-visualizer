@@ -53,13 +53,29 @@ export async function getCurrentPlaybackState(spotifyApi: SpotifyWebApi) {
   try {
     const response = await spotifyApi.getMyCurrentPlaybackState();
     const currentState = response.body;
-    console.log("current playback", currentState);
+    //console.log("current playback", currentState);
     return currentState;
   } catch (error: any) {
     console.error("Error fetching data", error.message);
     if (error.message.includes("Details: The access token expired.")) {
       throw new Error("The access token expired.");
     }
+    return null;
+  }
+}
+
+export async function getUserPlaylists(spotifyApi: SpotifyWebApi) {
+  if (!spotifyApi) {
+    return null;
+  }
+
+  try {
+    const response = await spotifyApi.getUserPlaylists();
+    const playlists = response.body;
+    console.log("playlists", playlists);
+    return playlists;
+  } catch (error: any) {
+    console.error("Error fetching data", error.message);
     return null;
   }
 }

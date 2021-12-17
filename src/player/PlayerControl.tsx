@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 
+import { PlaybackState } from "../data/playbackState";
+
 import './player.css';
+
+interface PlayerControlProps {
+  playbackState: PlaybackState;
+}
 
 function formatTime(ms: number) {
   const time = ms / 1000;
@@ -25,13 +31,14 @@ function renderPause() {
   );
 }
 
-export function PlayerControl({ playbackState }: any) {
-  const progress_ms = playbackState?.progress_ms || 0;
+export function PlayerControl({ playbackState }: PlayerControlProps) {
+  const { playback } = playbackState;
+  const progress_ms = playback.progress_ms || 0;
   const [progressMs, setProgressMs] = useState<number>(progress_ms);
   
   function onProgress(progressMs: number, timestamp: number) {
     let newProgressMs = progressMs + (new Date().getTime() - timestamp);
-    const durationMs = playbackState?.item?.duration_ms || 0;
+    const durationMs = playback.item?.duration_ms || 0;
     if (newProgressMs > durationMs) {
       newProgressMs = durationMs;
     }
@@ -40,50 +47,53 @@ export function PlayerControl({ playbackState }: any) {
 
   useEffect(() => {
     let interval: any;
-    if (playbackState) {
-      if (playbackState.is_playing) {
+    if (playback) {
+      const progressMs = playback.progress_ms || 0;
+      if (playback.is_playing) {
         // device playing => start interval
         const timestamp = new Date().getTime();
-        interval = setInterval(() => onProgress(playbackState.progress_ms, timestamp), 1000);
+        interval = setInterval(() => onProgress(progressMs, timestamp), 1000);
       } else {
         // device not playing => keep given progress
-        setProgressMs(playbackState.progress_ms);
+        setProgressMs(progressMs);
       }
     }
     return () => {
       clearInterval(interval);
     }
-  }, [playbackState]);
+  }, [playback]);
 
-  if (!playbackState) {
+  if (!playback) {
     return <div>Loading...</div>;
   }
 
   const {
     item
-  } = playbackState || {};
+  } = playback || {};
 
   return (
     <div className="player">
-      { playbackState &&
+      { playback && item && 
         <>
           <div className="player-info">
             <div className="player-info-cover">
-              <img src={item.album.images[0].url} alt="" />
+              { "album" in item && 
+                <img src={item.album.images[0].url} alt="" />
+              }
             </div>
             <div className="player-info-details">
               <div className="player-info-details-title">
                 {item.name}
               </div>
               <div className="player-info-details-artist">
-                {item.artists.map((a: any) => a.name).join(', ')}
+                { "artists" in item && item.artists.map((a: any) => a.name).join(', ') }
               </div>
             </div>
           </div>
           <div className="player-controls">
             <div className="player-controls-buttons">
               <button onClick={() => console.log('toggle')}>
-                { playbackState.is_playing ? renderPause() : renderPlay() }
+                { playback.is_playing ? renderPause() : renderPlay() }
               </button>
             </div>
             <div className="player-controls-progress">

@@ -7,10 +7,16 @@ import { Header } from './header/Header';
 import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
 import { Analyzer } from './analyzer/Analyzer';
+import { PlaybackState } from './data/playbackState';
 import { PlaylistData } from './data/playlistData';
 import { PlayerControl } from './player/PlayerControl';
 import { Sidebar } from './sidebar/Sidebar';
-import { getCurrentPlaybackState, getPlaylist, getPlaylistTracks } from './spotify/spotifyApi';
+import {
+  getCurrentPlaybackState,
+  getPlaylist,
+  getPlaylistTracks,
+  getUserPlaylists
+} from './spotify/spotifyApi';
 
 import './App.css';
 
@@ -22,12 +28,10 @@ function App() {
   const [lastPlaylistDataName, setLastPlaylistDataName] = useStickyState<string>('', 'lastPlaylistDataName');
   const [isAnalyzing, setIsAnalyzing] = useStickyState<boolean>(false, 'isAnalyzing');
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
-  const [playbackState, setPlaybackState ] = useState<any>(null);
+  const [currentPlaybackState, setCurrentPlaybackState] = useState<PlaybackState | undefined>(undefined);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
-  const [hasTrackChanged, setHasTrackChanged] = useState<boolean>(false);
-  const [hasPlaylistChanged, setHasPlaylistChanged] = useState<boolean>(false);
   const [currentPlaylistData, setCurrentPlaylistData] = useState<PlaylistData | undefined>(undefined);
 
   const setSpotifyApiToken = useCallback(
@@ -60,7 +64,7 @@ function App() {
         setFetchTimer(null);
       }
       setAuthToken(null);
-      setPlaybackState(null);
+      setCurrentPlaybackState(undefined);
       setCurrentPlaylist(null);
       setCurrentPlaylistData(undefined);
     }, [fetchTimer]
@@ -89,21 +93,20 @@ function App() {
     fetchToken();
   }, [search, token, setAuthToken, setSpotifyApiToken]);
 
-  async function fetchCurrentPlaybackState(state: any) {
+  async function fetchCurrentPlaybackState(state?: PlaybackState) {
     let progressMs = 0, durationMs = 0;
     let lastTrackId, lastPlaylistUri;
-    let currentState: any = null;
     let timeoutInterval = 10000;
 
     if (!spotifyApi) {
       return;
     }
 
-    if (state) {
-      lastTrackId = state.item.id;
-      lastPlaylistUri = state.context.uri;
-      progressMs = state.progress_ms;
-      durationMs = state.item?.duration_ms || 0;
+    if (state && state.playback) {
+      lastTrackId = state.playback.item?.id;
+      lastPlaylistUri = state.playback.context?.uri;
+      progressMs = state.playback.progress_ms || 0;
+      durationMs = state.playback.item?.duration_ms || 0;
     }
 
     if (durationMs > 0 && (durationMs - progressMs) < timeoutInterval) {
@@ -111,25 +114,31 @@ function App() {
       timeoutInterval = durationMs - progressMs + 10;
     }
 
+    let newPlaybackResponse: SpotifyApi.CurrentPlaybackResponse | null;
     try {
-      currentState = await getCurrentPlaybackState(spotifyApi);
+      newPlaybackResponse = await getCurrentPlaybackState(spotifyApi);
     } catch (error: any) {
       if (error.message.includes("The access token expired.")) {
         setAuthToken(null);
       }
-      currentState = null;
+      newPlaybackResponse = null;
       timeoutInterval = 30000;
     }
-    setPlaybackState(currentState);
-    setHasTrackChanged(currentState?.item?.id !== lastTrackId);
-    setHasPlaylistChanged(currentState?.context?.uri !== lastPlaylistUri);
 
-    if (currentState?.context?.type === "playlist") {
-      const playlistId = currentState.context.uri.split(":")[2];
+    // new playback state
+    const newPlaybackState = newPlaybackResponse ? {
+      playback: newPlaybackResponse,
+      hasTrackChanged: lastTrackId !== newPlaybackResponse?.item?.id,
+      hasPlaylistChanged: lastPlaylistUri !== newPlaybackResponse?.context?.uri
+    } : undefined;
+    setCurrentPlaybackState(newPlaybackState);
+
+    if (newPlaybackResponse?.context?.type === "playlist") {
+      const playlistId = newPlaybackResponse.context.uri.split(":")[2];
       fetchPlaylist(playlistId);
     }
 
-    const timer = setTimeout(() => fetchCurrentPlaybackState(currentState), timeoutInterval);
+    const timer = setTimeout(() => fetchCurrentPlaybackState(newPlaybackState), timeoutInterval);
     setFetchTimer(timer);
   }
   async function fetchPlaylist(playlistId: string) {
@@ -149,12 +158,32 @@ function App() {
       setCurrentPlaylist(playlist);
     }
   }
+  async function fetchUserPlaylists() {
+    if (!spotifyApi) {
+      return;
+    }
+
+    const userPlaylists = await getUserPlaylists(spotifyApi);
+    if (userPlaylists) {
+    }
+  }
 
   useEffect(() => {
-    if (spotifyApi && token && !fetchTimer) {
-      fetchCurrentPlaybackState(playbackState);
+    // fetch user's playlists
+    if (spotifyApi) {
+      fetchUserPlaylists();
     }
+  }, [spotifyApi]);
+
+  useEffect(() => {
+    // initial playback state fetch
+    if (spotifyApi && token && !fetchTimer) {
+      // it will start a timer that will fetch the playback state every 10 seconds
+      fetchCurrentPlaybackState(currentPlaybackState);
+    }
+
     return () => {
+      // stop the timer when the component unmounts
       if (fetchTimer) {
         clearTimeout(fetchTimer);
       }
@@ -162,10 +191,11 @@ function App() {
   }, [spotifyApi]);
 
   useEffect(() => {
-    if (!playbackState || !currentPlaylist) {
+    if (!currentPlaylist) {
       return;
     }
 
+    // get current analysis data
     let currentData = currentPlaylistData;
     if (!currentData) {
       // get the playlist data by the last name used
@@ -198,7 +228,7 @@ function App() {
         setCurrentPlaylistData(currentData);
       }
     }
-  }, [playbackState, currentPlaylist]);
+  }, [currentPlaylist]);
 
   return (
     <div className="App">
@@ -210,9 +240,9 @@ function App() {
           <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} />
         </div>
         <div className="app-content">
-          { playbackState && currentPlaylist && currentPlaylistData &&
+          { currentPlaybackState && currentPlaylist && currentPlaylistData &&
             <Analyzer
-              playbackState={playbackState}
+              playbackState={currentPlaybackState}
               playlist={currentPlaylist}
               currentData={currentPlaylistData}
               playlistData={playlistData}
@@ -222,9 +252,9 @@ function App() {
           { token && <WebPlayback token={token} setToken={setAuthToken} />}
         </div>
         <div className="app-footer">
-          { playbackState && 
+          { currentPlaybackState && 
             <ErrorBoundary FallbackComponent={() => (<div>Error</div>)}>
-              <PlayerControl playbackState={playbackState} />
+              <PlayerControl playbackState={currentPlaybackState} />
             </ErrorBoundary>
           }
         </div>
