@@ -1,14 +1,54 @@
 .sidebar {
+  align-items: center;
   color: #fff;
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
   width: 100%;
 }
-.sidebar img{
+.sidebar hr {
+  background-color: rgb(255, 255, 255, 0.3);
+  border: 0px;
+  display: block;
+  height: 1px;
+  margin: 5px 0px;
+  width: 90%;
+}
+
+.sidebar-playlist {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.sidebar-playlist img{
   height: 175px;
   margin-left: auto;
   margin-right: auto;
   margin-top: 10px;
   width: 175px;
+}
+
+.sidebar-playlist-data {
+  display: block;
+  height: 100%;
+  line-height: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+.MuiListItemText-root span {
+  color: #b3b3b3;
+  font-size: 14px;
+  font-weight: 400;
+}
+.MuiListItemButton-root:hover {
+  background-color: rgba(255, 255, 255, 0.1)!important;
+  color: #fff!important;
+}
+.MuiListItemButton-root.Mui-selected {
+  background-color: rgba(255, 255, 255, 0.15)!important;
+  color: #fff!important;
 }
