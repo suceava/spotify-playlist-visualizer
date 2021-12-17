@@ -20,12 +20,14 @@ function App() {
   const [token, setToken] = useStickyState<string | null>(null, 'token');
   const [playlistData, setPlaylistData] = useStickyState<PlaylistData[]>([], 'playlistData');
   const [lastPlaylistDataName, setLastPlaylistDataName] = useStickyState<string>('', 'lastPlaylistDataName');
+  const [isAnalyzing, setIsAnalyzing] = useStickyState<boolean>(false, 'isAnalyzing');
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
   const [playbackState, setPlaybackState ] = useState<any>(null);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
-  const [lastPlaylistId, setLastPlaylistId] = useState<string | null>(null);
+  const [hasTrackChanged, setHasTrackChanged] = useState<boolean>(false);
+  const [hasPlaylistChanged, setHasPlaylistChanged] = useState<boolean>(false);
   const [currentPlaylistData, setCurrentPlaylistData] = useState<PlaylistData | undefined>(undefined);
 
   const setSpotifyApiToken = useCallback(
@@ -89,6 +91,7 @@ function App() {
 
   async function fetchCurrentPlaybackState(state: any) {
     let progressMs = 0, durationMs = 0;
+    let lastTrackId, lastPlaylistUri;
     let currentState: any = null;
     let timeoutInterval = 10000;
 
@@ -97,6 +100,8 @@ function App() {
     }
 
     if (state) {
+      lastTrackId = state.item.id;
+      lastPlaylistUri = state.context.uri;
       progressMs = state.progress_ms;
       durationMs = state.item?.duration_ms || 0;
     }
@@ -116,6 +121,8 @@ function App() {
       timeoutInterval = 30000;
     }
     setPlaybackState(currentState);
+    setHasTrackChanged(currentState?.item?.id !== lastTrackId);
+    setHasPlaylistChanged(currentState?.context?.uri !== lastPlaylistUri);
 
     if (currentState?.context?.type === "playlist") {
       const playlistId = currentState.context.uri.split(":")[2];
