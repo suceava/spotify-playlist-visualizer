@@ -24,11 +24,13 @@ interface AuthResponse {
   access_token: string;
   expires_in: number;
   refresh_token: string;
+  timestamp: number;
 }
 
 function App() {
-  const search = window.localStorage.getItem('callback');
+  let search = window.localStorage.getItem('callback');
 
+  const [callbackQuery, setCallbackQuery] = useState<string | null>(search);
   const [auth, setAuth] = useStickyState<AuthResponse | null>(null, 'auth');
   const [playlistData, setPlaylistData] = useStickyState<PlaylistData[]>([], 'playlistData');
   const [lastPlaylistDataName, setLastPlaylistDataName] = useStickyState<string>('', 'lastPlaylistDataName');
@@ -38,6 +40,7 @@ function App() {
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
   const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
   const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
+  const [authTimer, setAuthTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentPlaylistData, setCurrentPlaylistData] = useState<PlaylistData | undefined>(undefined);
 
   const setSpotifyApiToken = useCallback(
@@ -63,11 +66,34 @@ function App() {
     [setAuth, setSpotifyApiToken]
   );
 
+  const checkAuth = useCallback(
+    () => {
+      if (auth) {
+        // expires_in is in seconds
+        // check if token is expired or about to expire
+        const expiresIn = auth.expires_in;
+        const expiresAt = auth.timestamp + (expiresIn - 60) * 1000;
+        const now = new Date().getTime();
+        if (expiresAt <= now) {
+          setCallbackQuery(`?refresh_token=${auth.refresh_token}`);
+        } else {
+          // set timer to check again when it's set to expire
+          setAuthTimer(setTimeout(checkAuth, expiresAt - now));
+        }
+      }
+    },
+    [auth]
+  );
+
   const logOut = useCallback(
     () => {
       if (fetchTimer) {
         clearInterval(fetchTimer);
         setFetchTimer(null);
+      }
+      if (authTimer) {
+        clearTimeout(authTimer);
+        setAuthTimer(null);
       }
       setAuthToken(null);
       setCurrentPlaybackState(undefined);
@@ -78,14 +104,22 @@ function App() {
 
   useEffect(() => {
     async function fetchToken() {
-      if (search) {
+      console.log('fetchToken', callbackQuery);
+      if (callbackQuery) {
         // clear out the callback query string
         window.localStorage.removeItem('callback');
+        setCallbackQuery(null);
 
         try {
-          const response = await API.get('spotifyapp', `/auth/callback${search}`, null);
+          const response = await API.get('spotifyapp', `/auth/callback${callbackQuery}`, null);
           if (response && response.access_token) {
-            setAuthToken(response);
+            const authResponse = {
+              access_token: response.access_token,
+              expires_in: response.expires_in,
+              refresh_token: response.refresh_token || auth?.refresh_token,
+              timestamp: new Date().getTime()
+            }
+            setAuthToken(authResponse);
           }
         } catch (e) {
           // error getting token => clear out token from state
@@ -94,10 +128,21 @@ function App() {
         }
       } else {
         setSpotifyApiToken(auth?.access_token);
+        if (!authTimer) {
+          checkAuth();
+        }
       }
     }
     fetchToken();
-  }, [search, auth, setAuthToken, setSpotifyApiToken]);
+
+    return () => {
+      // stope the auth timer
+      if (authTimer) {
+        clearTimeout(authTimer);
+        setAuthTimer(null);
+      }
+    }
+  }, [callbackQuery, auth, setAuthToken, setSpotifyApiToken]);
 
   async function fetchCurrentPlaybackState(state?: PlaybackState) {
     let progressMs = 0, durationMs = 0;

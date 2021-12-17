@@ -21,7 +21,7 @@
         },
         "spotifyauthcallback": {
           "deploymentBucketName": "amplify-amplifybdded62a696d4-staging-221034-deployment",
-          "s3Key": "amplify-builds/spotifyauthcallback-58673444754a5959727a-build.zip",
+          "s3Key": "amplify-builds/spotifyauthcallback-35365541582f61767154-build.zip",
           "secretsPathAmplifyAppId": "d4a6gc12kp2rc",
           "authRedirectUri": "http://localhost:3000/auth/callback"
         }
