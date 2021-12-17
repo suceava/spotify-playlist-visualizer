@@ -1,5 +1,3 @@
-import { useCallback } from 'react';
-
 import './header.css';
 
 interface LogoutProps {

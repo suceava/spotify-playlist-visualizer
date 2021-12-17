@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { ResponsiveContainer, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts';
 
 import { ScatterData } from '../data/scatterData';

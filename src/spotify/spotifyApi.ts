@@ -53,7 +53,7 @@ export async function getCurrentPlaybackState(spotifyApi: SpotifyWebApi) {
   try {
     const response = await spotifyApi.getMyCurrentPlaybackState();
     const currentState = response.body;
-//    console.log("current playback", currentState);
+    console.log("current playback", currentState);
     return currentState;
   } catch (error: any) {
     console.error("Error fetching data", error.message);

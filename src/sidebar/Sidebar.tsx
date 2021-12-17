@@ -11,7 +11,7 @@ export function Sidebar({ currentPlaylist, playlistMap }: SidebarProps) {
     <div className="sidebar">
       {currentPlaylist && 
         <div className="sidebar-playlist-info">
-          <img src={currentPlaylist.images[0].url} />
+          <img src={currentPlaylist.images[0].url} alt="" />
           <div className="sidebar-playlist-info-text">
             <h2>{currentPlaylist.name}</h2>
             <p>{`${currentPlaylist.tracks.items.length} tracks`}</p>
