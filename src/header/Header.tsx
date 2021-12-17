@@ -4,7 +4,7 @@ import { Logout } from './Logout';
 import './header.css';
 
 export interface HeaderProps {
-  token: string | null;
+  token?: string;
   logOut: () => void;
 }
 

@@ -20,10 +20,16 @@ import {
 
 import './App.css';
 
+interface AuthResponse {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
+}
+
 function App() {
   const search = window.localStorage.getItem('callback');
 
-  const [token, setToken] = useStickyState<string | null>(null, 'token');
+  const [auth, setAuth] = useStickyState<AuthResponse | null>(null, 'auth');
   const [playlistData, setPlaylistData] = useStickyState<PlaylistData[]>([], 'playlistData');
   const [lastPlaylistDataName, setLastPlaylistDataName] = useStickyState<string>('', 'lastPlaylistDataName');
   const [isAnalyzing, setIsAnalyzing] = useStickyState<boolean>(false, 'isAnalyzing');
@@ -35,7 +41,7 @@ function App() {
   const [currentPlaylistData, setCurrentPlaylistData] = useState<PlaylistData | undefined>(undefined);
 
   const setSpotifyApiToken = useCallback(
-    (token: string | null) => {
+    (token?: string) => {
       const api = spotifyApi ? spotifyApi : (token ? new SpotifyWebApi() : null);
       if (api) {
         if (token) {
@@ -46,15 +52,15 @@ function App() {
       }
       setSpotifyApi(api);
     },
-    [ setSpotifyApi]
+    [ setSpotifyApi ]
   );
 
   const setAuthToken = useCallback(
-    (token: string | null) => {
-      setSpotifyApiToken(token);
-      setToken(token);
+    (response: AuthResponse | null) => {
+      setAuth(response);
+      setSpotifyApiToken(response?.access_token);
     },
-    [setToken, setSpotifyApiToken]
+    [setAuth, setSpotifyApiToken]
   );
 
   const logOut = useCallback(
@@ -79,7 +85,7 @@ function App() {
         try {
           const response = await API.get('spotifyapp', `/auth/callback${search}`, null);
           if (response && response.access_token) {
-            setAuthToken(response.access_token);
+            setAuthToken(response);
           }
         } catch (e) {
           // error getting token => clear out token from state
@@ -87,11 +93,11 @@ function App() {
           setAuthToken(null);
         }
       } else {
-        setSpotifyApiToken(token);
+        setSpotifyApiToken(auth?.access_token);
       }
     }
     fetchToken();
-  }, [search, token, setAuthToken, setSpotifyApiToken]);
+  }, [search, auth, setAuthToken, setSpotifyApiToken]);
 
   async function fetchCurrentPlaybackState(state?: PlaybackState) {
     let progressMs = 0, durationMs = 0;
@@ -177,7 +183,7 @@ function App() {
 
   useEffect(() => {
     // initial playback state fetch
-    if (spotifyApi && token && !fetchTimer) {
+    if (spotifyApi && auth?.access_token && !fetchTimer) {
       // it will start a timer that will fetch the playback state every 10 seconds
       fetchCurrentPlaybackState(currentPlaybackState);
     }
@@ -234,7 +240,7 @@ function App() {
     <div className="App">
       <div className="app-grid">
         <div className="app-header">
-          <Header token={token} logOut={logOut} />
+          <Header token={auth?.access_token} logOut={logOut} />
         </div>
         <div className="app-sidebar">
           <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} />
@@ -249,7 +255,7 @@ function App() {
               setPlaylistData={setPlaylistData}
             />
           }
-          { token && <WebPlayback token={token} setToken={setAuthToken} />}
+          { auth?.access_token && <WebPlayback token={auth?.access_token} setToken={setAuthToken} />}
         </div>
         <div className="app-footer">
           { currentPlaybackState && 

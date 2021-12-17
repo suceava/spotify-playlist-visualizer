@@ -27,7 +27,6 @@ export function Analyzer({
   const { scatterData } = currentData;
 
   useEffect(() => {
-    console.log('Analyzer: useEffect', playbackState.hasTrackChanged, playbackState.hasPlaylistChanged);
     const track = playbackState.playback.item;
     if (track && playlist) {
       const trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
