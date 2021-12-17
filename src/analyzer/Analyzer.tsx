@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { updateScatterData } from '../data/scatterData';
 import { ShuffleAnalyzer } from './ShuffleAnalyzer';

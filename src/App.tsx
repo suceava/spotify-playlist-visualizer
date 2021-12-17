@@ -38,7 +38,7 @@ function App() {
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
   const [currentPlaybackState, setCurrentPlaybackState] = useState<PlaybackState | undefined>(undefined);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
-  const [currentPlaylist, setCurrentPlaylist] = useState<any>(null);
+  const [currentPlaylist, setCurrentPlaylist] = useState<SpotifyApi.SinglePlaylistResponse | null>(null);
   const [fetchTimer, setFetchTimer] = useState<NodeJS.Timeout | null>(null);
   const [authTimer, setAuthTimer] = useState<NodeJS.Timeout | null>(null);
   const [currentPlaylistData, setCurrentPlaylistData] = useState<PlaylistData | undefined>(undefined);
@@ -67,18 +67,29 @@ function App() {
   );
 
   const checkAuth = useCallback(
-    () => {
+    (forceRefresh: boolean = false) => {
+      // clear timer
+      setAuthTimer(null);
+
       if (auth) {
         // expires_in is in seconds
         // check if token is expired or about to expire
         const expiresIn = auth.expires_in;
         const expiresAt = auth.timestamp + (expiresIn - 60) * 1000;
         const now = new Date().getTime();
-        if (expiresAt <= now) {
+        if (forceRefresh || expiresAt <= now) {
+          console.warn('Token is expired, refreshing...');
           setCallbackQuery(`?refresh_token=${auth.refresh_token}`);
         } else {
           // set timer to check again when it's set to expire
+          console.log(`Auth token will expire in ${(expiresAt - now) / 1000} seconds`);
           setAuthTimer(setTimeout(checkAuth, expiresAt - now));
+        }
+      } else {
+        // auth is null
+        if (fetchTimer) {
+          clearInterval(fetchTimer);
+          setFetchTimer(null);
         }
       }
     },
@@ -104,13 +115,9 @@ function App() {
 
   useEffect(() => {
     async function fetchToken() {
-      console.log('fetchToken', callbackQuery);
       if (callbackQuery) {
-        // clear out the callback query string
-        window.localStorage.removeItem('callback');
-        setCallbackQuery(null);
-
         try {
+          // fetch the token from the callback query string
           const response = await API.get('spotifyapp', `/auth/callback${callbackQuery}`, null);
           if (response && response.access_token) {
             const authResponse = {
@@ -120,13 +127,21 @@ function App() {
               timestamp: new Date().getTime()
             }
             setAuthToken(authResponse);
+          } else {
+            console.error('No access token returned from Spotify', response);
+            setAuthToken(null);
           }
         } catch (e) {
           // error getting token => clear out token from state
           console.error('error', e);
           setAuthToken(null);
+        } finally {
+          // clear out the callback query string
+          window.localStorage.removeItem('callback');
+          setCallbackQuery(null);
         }
       } else {
+        // no callback query string => start up auth refresh timer
         setSpotifyApiToken(auth?.access_token);
         if (!authTimer) {
           checkAuth();
@@ -142,7 +157,7 @@ function App() {
         setAuthTimer(null);
       }
     }
-  }, [callbackQuery, auth, setAuthToken, setSpotifyApiToken]);
+  }, [callbackQuery, setAuthToken, setSpotifyApiToken]);
 
   async function fetchCurrentPlaybackState(state?: PlaybackState) {
     let progressMs = 0, durationMs = 0;
@@ -170,7 +185,8 @@ function App() {
       newPlaybackResponse = await getCurrentPlaybackState(spotifyApi);
     } catch (error: any) {
       if (error.message.includes("The access token expired.")) {
-        setAuthToken(null);
+        checkAuth(true);
+        return;
       }
       newPlaybackResponse = null;
       timeoutInterval = 30000;
@@ -198,7 +214,15 @@ function App() {
     }
 
     // fetch playlist
-    let playlist = await getPlaylist(spotifyApi, playlistId, false);
+    let playlist;
+    try {
+      playlist = await getPlaylist(spotifyApi, playlistId, false);
+    } catch (error: any) {
+      if (error.message.includes("The access token expired.")) {
+        checkAuth(true);
+        return;
+      }
+    }
     if (playlist) {
       // update state with playlist before fetching tracks
       setPlaylistMap(playlistMap.set(playlistId, playlist));
@@ -214,7 +238,15 @@ function App() {
       return;
     }
 
-    const userPlaylists = await getUserPlaylists(spotifyApi);
+    let userPlaylists;
+    try {
+      userPlaylists = await getUserPlaylists(spotifyApi);
+    } catch (error: any) {
+      if (error.message.includes("The access token expired.")) {
+        checkAuth(true);
+        return;
+      }
+    }
     if (userPlaylists) {
     }
   }
@@ -288,7 +320,7 @@ function App() {
           <Header token={auth?.access_token} logOut={logOut} />
         </div>
         <div className="app-sidebar">
-          <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} />
+          <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} playlistData={playlistData} />
         </div>
         <div className="app-content">
           { currentPlaybackState && currentPlaylist && currentPlaylistData &&

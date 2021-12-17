@@ -15,7 +15,10 @@ export async function getPlaylist(spotifyApi: SpotifyWebApi, playlistId: string,
     }
     return playlist;
   } catch (error: any) {
-    console.error("Error fetching data", error.message);
+    console.error("Error fetching playlist", error.message);
+    if (error.message.includes("Details: The access token expired.")) {
+      throw new Error("The access token expired.");
+    }
     return null;
   }
 }
@@ -40,7 +43,10 @@ export async function getPlaylistTracks(spotifyApi: SpotifyWebApi, playlist: any
     }
     return playlist;
   } catch (error: any) {
-    console.error("Error fetching data", error.message);
+    console.error("Error fetching playlist tracks", error.message);
+    if (error.message.includes("Details: The access token expired.")) {
+      throw new Error("The access token expired.");
+    }
     return null;
   }
 }
@@ -56,7 +62,7 @@ export async function getCurrentPlaybackState(spotifyApi: SpotifyWebApi) {
     //console.log("current playback", currentState);
     return currentState;
   } catch (error: any) {
-    console.error("Error fetching data", error.message);
+    console.error("Error fetching current playback state", error.message);
     if (error.message.includes("Details: The access token expired.")) {
       throw new Error("The access token expired.");
     }
@@ -75,7 +81,10 @@ export async function getUserPlaylists(spotifyApi: SpotifyWebApi) {
     console.log("playlists", playlists);
     return playlists;
   } catch (error: any) {
-    console.error("Error fetching data", error.message);
+    console.error("Error fetching user playlists", error.message);
+    if (error.message.includes("Details: The access token expired.")) {
+      throw new Error("The access token expired.");
+    }
     return null;
   }
 }
