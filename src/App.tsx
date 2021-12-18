@@ -8,7 +8,7 @@ import { useStickyState } from './stickyState';
 import WebPlayback from './WebPlayback'
 import { Analyzer } from './analyzer/Analyzer';
 import { PlaybackState } from './data/playbackState';
-import { PlaylistData } from './data/playlistData';
+import { PlaylistData, getPlaylistInfo } from './data/playlistData';
 import { PlayerControl } from './player/PlayerControl';
 import { Sidebar } from './sidebar/Sidebar';
 import {
@@ -34,7 +34,7 @@ function App() {
   const [auth, setAuth] = useStickyState<AuthResponse | null>(null, 'auth');
   const [playlistData, setPlaylistData] = useStickyState<PlaylistData[]>([], 'playlistData');
   const [lastPlaylistDataName, setLastPlaylistDataName] = useStickyState<string>('', 'lastPlaylistDataName');
-  const [isAnalyzing, setIsAnalyzing] = useStickyState<boolean>(false, 'isAnalyzing');
+  const [isAnalyzing, setIsAnalyzing] = useStickyState<boolean>(true, 'isAnalyzing');
   const [spotifyApi, setSpotifyApi] = useState<SpotifyWebApi | null>(null);
   const [currentPlaybackState, setCurrentPlaybackState] = useState<PlaybackState | undefined>(undefined);
   const [playlistMap, setPlaylistMap] = useState<Map<string, any>>(new Map());
@@ -111,6 +111,13 @@ function App() {
       setCurrentPlaylist(null);
       setCurrentPlaylistData(undefined);
     }, [fetchTimer]
+  );
+
+  const toggleAnalyze = useCallback(
+    () => {
+      setIsAnalyzing(!isAnalyzing);
+    },
+    [isAnalyzing]
   );
 
   useEffect(() => {
@@ -274,7 +281,7 @@ function App() {
   }, [spotifyApi]);
 
   useEffect(() => {
-    if (!currentPlaylist) {
+    if (!isAnalyzing || !currentPlaylist) {
       return;
     }
 
@@ -286,10 +293,10 @@ function App() {
       if (!currentData || currentData.playlist.id !== currentPlaylist.id) {
         // new playlist analysis
         currentData = {
-          name: `${currentPlaylist.name} ${new Date().toLocaleString()}`,
-          playlist: currentPlaylist,
+          name: `${currentPlaylist.name} - ${new Date().toLocaleString()}`,
+          playlist: getPlaylistInfo(currentPlaylist),
           scatterData: [],
-          timestamp: new Date()
+          timestamp: new Date().getTime()
         };
         playlistData.push(currentData);
         setPlaylistData(Array.from(playlistData));
@@ -300,10 +307,10 @@ function App() {
       if (currentData.playlist.id !== currentPlaylist.id) {
         // playlist changed => new playlist analysis
         currentData = {
-          name: `${currentPlaylist.name} ${new Date().toLocaleString()}`,
-          playlist: currentPlaylist,
+          name: `${currentPlaylist.name} - ${new Date().toLocaleString()}`,
+          playlist: getPlaylistInfo(currentPlaylist),
           scatterData: [],
-          timestamp: new Date()
+          timestamp: new Date().getTime()
         };
         playlistData.push(currentData);
         setPlaylistData(Array.from(playlistData));
@@ -311,20 +318,34 @@ function App() {
         setCurrentPlaylistData(currentData);
       }
     }
-  }, [currentPlaylist]);
+  }, [currentPlaylist, isAnalyzing]);
 
   return (
     <div className="App">
       <div className="app-grid">
         <div className="app-header">
-          <Header token={auth?.access_token} logOut={logOut} />
+          <Header
+            token={auth?.access_token}
+            logOut={logOut}
+            isAnalyzing={isAnalyzing}
+            toggleAnalyze={toggleAnalyze}
+          />
         </div>
         <div className="app-sidebar">
-          <Sidebar currentPlaylist={currentPlaylist} playlistMap={playlistMap} playlistData={playlistData} />
+          { auth &&
+            <Sidebar
+              currentPlaylist={currentPlaylist}
+              playlistMap={playlistMap}
+              playlistData={playlistData}
+              isAnalyzing={isAnalyzing}
+              setCurrentPlaylistData={setCurrentPlaylistData}
+            />
+          }
         </div>
         <div className="app-content">
-          { currentPlaybackState && currentPlaylist && currentPlaylistData &&
+          { currentPlaylistData &&
             <Analyzer
+              isAnalyzing={isAnalyzing}
               playbackState={currentPlaybackState}
               playlist={currentPlaylist}
               currentData={currentPlaylistData}

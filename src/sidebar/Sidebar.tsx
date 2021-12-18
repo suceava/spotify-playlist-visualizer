@@ -12,17 +12,30 @@ export interface SidebarProps {
   currentPlaylist: SpotifyApi.SinglePlaylistResponse | null;
   playlistMap: Map<string, any>;
   playlistData: PlaylistData[];
+  isAnalyzing: boolean;
+  setCurrentPlaylistData: React.Dispatch<React.SetStateAction<PlaylistData | undefined>>;
 }
 
-export function Sidebar({ currentPlaylist, playlistMap, playlistData }: SidebarProps) {
+export function Sidebar({
+  currentPlaylist,
+  playlistMap,
+  playlistData,
+  isAnalyzing,
+  setCurrentPlaylistData
+}: SidebarProps) {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
   const onListItemClick = useCallback(
     (event, playlist, index) => {
       console.log(playlist, index);
       setSelectedPlaylist(playlist.name);
+      if (!isAnalyzing) {
+        // select playlist analysis to display
+        setCurrentPlaylistData(playlist);
+      }
     },
     [playlistData],
   )
+
   return (
     <div className="sidebar">
       <div className="sidebar-playlist">
@@ -37,17 +50,19 @@ export function Sidebar({ currentPlaylist, playlistMap, playlistData }: SidebarP
         }
       </div>
       <hr/>
-      <div className="sidebar-playlist-data">
-        <List dense={true}>
-          {
-            playlistData.map((playlist, i) => (
-              <ListItemButton key={i} onClick={(e) => onListItemClick(e, playlist, i)} selected={selectedPlaylist === playlist.name}>
-                <ListItemText>{playlist.name}</ListItemText>
-              </ListItemButton>
-            ))
-          }
-        </List>
-      </div>
+      { !isAnalyzing &&
+        <div className="sidebar-playlist-data">
+          <List dense={true}>
+            {
+              playlistData.sort((a, b) => a.timestamp > b.timestamp ? -1 : 1).map((playlist, i) => (
+                <ListItemButton key={i} onClick={(e) => onListItemClick(e, playlist, i)} selected={selectedPlaylist === playlist.name}>
+                  <ListItemText>{playlist.name}</ListItemText>
+                </ListItemButton>
+              ))
+            }
+          </List>
+        </div>
+      }
     </div>
   );
 }

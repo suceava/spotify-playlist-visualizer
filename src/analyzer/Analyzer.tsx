@@ -9,34 +9,41 @@ import { PlaylistData } from '../data/playlistData';
 import './analyzer.css';
 
 interface AnalyzerProps {
+  isAnalyzing: boolean;
   currentData: PlaylistData;
   setPlaylistData: React.Dispatch<React.SetStateAction<PlaylistData[]>>;
   playlistData: PlaylistData[];
-  playbackState: PlaybackState;
-  playlist: any;
+  playbackState?: PlaybackState;
+  playlist: SpotifyApi.SinglePlaylistResponse | null;
 }
 
 export function Analyzer({
+  isAnalyzing,
   playbackState,
   playlist,
   currentData,
   setPlaylistData,
   playlistData
 }: AnalyzerProps) {
-  const playlistTrackCount = playlist?.tracks?.items?.length || 0;
   const { scatterData } = currentData;
+  const playlistTrackCount = playlist?.tracks?.items?.length || currentData.playlist.tracks.total;
 
   useEffect(() => {
-    const track = playbackState.playback.item;
-    if (track && playlist) {
-      const trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
-      if (playbackState.hasTrackChanged) {
-        updateScatterData(scatterData, trackIndex, track);
-        currentData.scatterData = scatterData;
-        setPlaylistData(Array.from(playlistData));
+    console.log('analyzer current data', currentData);
+    if (playbackState) {
+      const track = playbackState.playback.item;
+      if (isAnalyzing && track && playlist) {
+        const trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
+        if (playbackState.hasTrackChanged) {
+          updateScatterData(scatterData, trackIndex, track);
+          currentData.scatterData = scatterData;
+          // update track total just in case it has changed
+          currentData.playlist.tracks.total = playlist.tracks.total;
+          setPlaylistData(Array.from(playlistData));
+        }
       }
     }
-  }, [playbackState, playlist]);
+  }, [isAnalyzing, playbackState, playlist]);
 
   return (
     <div className="analyzer">

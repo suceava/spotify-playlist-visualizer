@@ -5,7 +5,10 @@
   grid-template-areas: "title menu";
 }
 .header-title {
+  align-items: center;
   grid-area: "title";
+  height: 100%;
+  width: 100%;
 }
 .header-menu {
   grid-area: "menu";
@@ -57,6 +60,19 @@
 .header-logout button:hover {
   background-color: #700;
   cursor: pointer;
+  transition: all .1s;
+  transform: scale(1.08);
+}
+
+.btn-analyze {
+  background-color: #1ed760;
+  border: none;
+  border-radius: 20px;
+  color: #0000ee;
+  margin-top: 20px;
+  padding: 8px 16px;
+}
+.btn-analyze:hover {
   transition: all .1s;
   transform: scale(1.08);
 }
