@@ -16,9 +16,9 @@ export function Header({token, logOut, isAnalyzing, toggleAnalyze}: HeaderProps)
     <div className="header">
       <div className="header-title">
         { !token && <Login /> }
-        { token &&
+        {/* { token &&
           <button className="btn-analyze" onClick={toggleAnalyze}>{isAnalyzing ? "Stop Analyzing": "Start Analyzing"}</button>
-        }
+        } */}
       </div>
       <div className="header-menu">
         { token && <Logout logOut={logOut} /> }

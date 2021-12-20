@@ -1,5 +1,6 @@
 import { API } from 'aws-amplify';
 import { useCallback, useEffect, useState } from 'react';
+import ReactDOM from "react-dom";
 import { ErrorBoundary } from 'react-error-boundary'
 import SpotifyWebApi from 'spotify-web-api-node';
 
@@ -120,6 +121,66 @@ function App() {
     [isAnalyzing]
   );
 
+  const setUpPlaylistData = useCallback(
+    (playlist: SpotifyApi.SinglePlaylistResponse | null, currentPlaylistDataName: string) => {
+      if (!isAnalyzing || !playlist) {
+        return;
+      }
+
+      // get the playlist data by the last name used
+      let currentData = playlistData.find(data => data.name === currentPlaylistDataName);
+      if (!currentData || currentData.playlist.id !== playlist.id) {
+        // new playlist analysis
+        console.log(`Analyzing new playlist: ${playlist.name}`);
+        currentData = {
+          name: `${playlist.name} - ${new Date().toLocaleString()}`,
+          playlist: getPlaylistInfo(playlist),
+          scatterData: [],
+          timestamp: new Date().getTime()
+        };
+        playlistData.push(currentData);
+        setPlaylistData(Array.from(playlistData));
+        setLastPlaylistDataName(currentData.name);
+        setCurrentPlaylistData(currentData);
+      }
+
+      // // get current analysis data
+      // let currentData = currentPlaylistData;
+      // if (!currentData) {
+      //   // get the playlist data by the last name used
+      //   currentData = playlistData.find(data => data.name === lastPlaylistDataName);
+      //   if (!currentData || currentData.playlist.id !== newPlaylistId) {
+      //     // new playlist analysis
+      //     currentData = {
+      //       name: `${currentPlaylist.name} - ${new Date().toLocaleString()}`,
+      //       playlist: getPlaylistInfo(currentPlaylist),
+      //       scatterData: [],
+      //       timestamp: new Date().getTime()
+      //     };
+      //     playlistData.push(currentData);
+      //     setPlaylistData(Array.from(playlistData));
+      //     setLastPlaylistDataName(currentData.name);
+      //   }
+      //   setCurrentPlaylistData(currentData);
+      // } else {
+      //   if (currentData.playlist.id !== newPlaylistId) {
+      //     // playlist changed => new playlist analysis
+      //     currentData = {
+      //       name: `${currentPlaylist.name} - ${new Date().toLocaleString()}`,
+      //       playlist: getPlaylistInfo(currentPlaylist),
+      //       scatterData: [],
+      //       timestamp: new Date().getTime()
+      //     };
+      //     playlistData.push(currentData);
+      //     setPlaylistData(Array.from(playlistData));
+      //     setLastPlaylistDataName(currentData.name);
+      //     setCurrentPlaylistData(currentData);
+      //   }
+      // }
+    },
+    [isAnalyzing, playlistData],
+  );
+
   useEffect(() => {
     async function fetchToken() {
       if (callbackQuery) {
@@ -210,7 +271,7 @@ function App() {
     setCurrentPlaybackState(newPlaybackState);
 
     if (newPlaybackResponse?.context?.type === "playlist") {
-      const playlistId = newPlaybackResponse.context.uri.split(":")[2];
+      const playlistId = newPlaybackResponse?.context?.uri.split(":")[2];
       fetchPlaylist(playlistId);
     }
 
@@ -223,7 +284,7 @@ function App() {
     }
 
     // fetch playlist
-    let playlist;
+    let playlist: SpotifyApi.SinglePlaylistResponse | null = null;
     try {
       playlist = await getPlaylist(spotifyApi, playlistId, false);
     } catch (error: any) {
@@ -233,9 +294,16 @@ function App() {
       }
     }
     if (playlist) {
-      // update state with playlist before fetching tracks
-      setPlaylistMap(playlistMap.set(playlistId, playlist));
-      setCurrentPlaylist(playlist);
+      ReactDOM.unstable_batchedUpdates(() => {
+        // must have all state update bached up
+        if (currentPlaybackState?.hasPlaylistChanged) {
+          setUpPlaylistData(playlist, lastPlaylistDataName);
+        }
+
+        // update state with playlist before fetching tracks
+        setPlaylistMap(playlistMap.set(playlistId, playlist));
+        setCurrentPlaylist(playlist);
+      });
       // fetch tracks
       playlist = await getPlaylistTracks(spotifyApi, playlist);
       setPlaylistMap(playlistMap.set(playlistId, playlist));
@@ -284,43 +352,7 @@ function App() {
   }, [spotifyApi]);
 
   useEffect(() => {
-    if (!isAnalyzing || !currentPlaylist) {
-      return;
-    }
-
-    // get current analysis data
-    let currentData = currentPlaylistData;
-    if (!currentData) {
-      // get the playlist data by the last name used
-      currentData = playlistData.find(data => data.name === lastPlaylistDataName);
-      if (!currentData || currentData.playlist.id !== currentPlaylist.id) {
-        // new playlist analysis
-        currentData = {
-          name: `${currentPlaylist.name} - ${new Date().toLocaleString()}`,
-          playlist: getPlaylistInfo(currentPlaylist),
-          scatterData: [],
-          timestamp: new Date().getTime()
-        };
-        playlistData.push(currentData);
-        setPlaylistData(Array.from(playlistData));
-        setLastPlaylistDataName(currentData.name);
-      }
-      setCurrentPlaylistData(currentData);
-    } else {
-      if (currentData.playlist.id !== currentPlaylist.id) {
-        // playlist changed => new playlist analysis
-        currentData = {
-          name: `${currentPlaylist.name} - ${new Date().toLocaleString()}`,
-          playlist: getPlaylistInfo(currentPlaylist),
-          scatterData: [],
-          timestamp: new Date().getTime()
-        };
-        playlistData.push(currentData);
-        setPlaylistData(Array.from(playlistData));
-        setLastPlaylistDataName(currentData.name);
-        setCurrentPlaylistData(currentData);
-      }
-    }
+    setUpPlaylistData(currentPlaylist, lastPlaylistDataName);
   }, [currentPlaylist, isAnalyzing]);
 
   return (
