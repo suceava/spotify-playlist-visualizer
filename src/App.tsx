@@ -190,7 +190,7 @@ function App() {
           if (response && response.access_token) {
             const authResponse = {
               access_token: response.access_token,
-              expires_in: response.expires_in - 3000,
+              expires_in: response.expires_in,
               refresh_token: response.refresh_token || auth?.refresh_token,
               timestamp: new Date().getTime()
             }
@@ -388,7 +388,7 @@ function App() {
               setPlaylistData={setPlaylistData}
             />
           }
-          { auth?.access_token && <WebPlayback token={auth?.access_token} setToken={setAuthToken} />}
+          {/* { auth?.access_token && <WebPlayback token={auth?.access_token} setToken={setAuthToken} />} */}
         </div>
         <div className="app-footer">
           { currentPlaybackState && 
