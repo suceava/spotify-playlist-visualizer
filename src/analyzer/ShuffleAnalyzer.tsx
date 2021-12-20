@@ -10,8 +10,6 @@ interface ShuffleAnalyzerProps {
 }
 
 export function ShuffleAnalyzer({ playlistTrackCount, scatterData }: ShuffleAnalyzerProps) {
-
-
   return (
     <div className="shuffle-analyzer">
       { playlistTrackCount > 0 && 

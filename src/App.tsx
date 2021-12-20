@@ -78,15 +78,15 @@ function App() {
         const expiresAt = auth.timestamp + (expiresIn - 60) * 1000;
         const now = new Date().getTime();
         if (forceRefresh || expiresAt <= now) {
-          console.warn('Token is expired, refreshing...');
+          console.warn('Token is expired, refreshing...', now);
           setCallbackQuery(`?refresh_token=${auth.refresh_token}`);
         } else {
           // set timer to check again when it's set to expire
-          console.log(`Auth token will expire in ${(expiresAt - now) / 1000} seconds`);
+          console.log(`Auth token will expire in ${(expiresAt - now) / 1000} seconds`, now);
           setAuthTimer(setTimeout(checkAuth, expiresAt - now));
         }
       } else {
-        // auth is null
+        // auth is null => stop fetching
         if (fetchTimer) {
           clearInterval(fetchTimer);
           setFetchTimer(null);
@@ -129,7 +129,7 @@ function App() {
           if (response && response.access_token) {
             const authResponse = {
               access_token: response.access_token,
-              expires_in: response.expires_in,
+              expires_in: response.expires_in - 3000,
               refresh_token: response.refresh_token || auth?.refresh_token,
               timestamp: new Date().getTime()
             }
@@ -149,7 +149,9 @@ function App() {
         }
       } else {
         // no callback query string => start up auth refresh timer
-        setSpotifyApiToken(auth?.access_token);
+        if (!spotifyApi) {
+          setSpotifyApiToken(auth?.access_token);
+        }
         if (!authTimer) {
           checkAuth();
         }
@@ -263,10 +265,11 @@ function App() {
     if (spotifyApi) {
       fetchUserPlaylists();
     }
-  }, [spotifyApi]);
+  }, []);
 
   useEffect(() => {
     // initial playback state fetch
+    console.log('start fetching playback state', auth, spotifyApi, fetchTimer);
     if (spotifyApi && auth?.access_token && !fetchTimer) {
       // it will start a timer that will fetch the playback state every 10 seconds
       fetchCurrentPlaybackState(currentPlaybackState);
@@ -343,7 +346,7 @@ function App() {
           }
         </div>
         <div className="app-content">
-          { currentPlaylistData &&
+          { auth?.access_token && currentPlaylistData &&
             <Analyzer
               isAnalyzing={isAnalyzing}
               playbackState={currentPlaybackState}
