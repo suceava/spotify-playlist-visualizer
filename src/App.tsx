@@ -141,8 +141,8 @@ function App() {
         playlistData.push(currentData);
         setPlaylistData(Array.from(playlistData));
         setLastPlaylistDataName(currentData.name);
-        setCurrentPlaylistData(currentData);
       }
+      setCurrentPlaylistData(currentData);
 
       // // get current analysis data
       // let currentData = currentPlaylistData;
@@ -353,7 +353,7 @@ function App() {
 
   useEffect(() => {
     setUpPlaylistData(currentPlaylist, lastPlaylistDataName);
-  }, [currentPlaylist, isAnalyzing]);
+  }, [currentPlaylist, isAnalyzing, lastPlaylistDataName]);
 
   return (
     <div className="App">
