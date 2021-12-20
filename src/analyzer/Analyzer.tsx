@@ -26,15 +26,15 @@ export function Analyzer({
   playlistData
 }: AnalyzerProps) {
   const { scatterData } = currentData;
-  const playlistTrackCount = playlist?.tracks?.items?.length || currentData.playlist.tracks.total;
+  const playlistTrackCount = currentData.playlist.tracks.total;
 
   useEffect(() => {
-    console.log('analyzer current data', currentData);
+    console.log('Analyzer useEffect', playbackState);
     if (playbackState) {
       const track = playbackState.playback.item;
       if (isAnalyzing && track && playlist) {
         const trackIndex = playlist.tracks.items.findIndex((t: any) => t.track.id === track.id) + 1;
-        if (playbackState.hasTrackChanged) {
+        if (trackIndex >= 0 && (playbackState.hasTrackChanged || !scatterData[trackIndex])) {
           updateScatterData(scatterData, trackIndex, track);
           currentData.scatterData = scatterData;
           // update track total just in case it has changed

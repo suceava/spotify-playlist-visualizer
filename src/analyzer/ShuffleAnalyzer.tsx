@@ -24,7 +24,7 @@ export function ShuffleAnalyzer({ playlistTrackCount, scatterData }: ShuffleAnal
                 domain={[1, playlistTrackCount]}
                 interval={0}
                 tick={{ fontSize: 8 }}
-                tickCount={playlistTrackCount}
+                tickCount={Math.min(playlistTrackCount, 100)}
                 padding={{left: 20, right: 20}}
               />
               <YAxis

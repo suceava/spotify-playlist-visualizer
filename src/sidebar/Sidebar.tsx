@@ -1,5 +1,4 @@
 import List from "@mui/material/List";
-import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import { useCallback, useState } from "react";
@@ -44,7 +43,7 @@ export function Sidebar({
             <img src={currentPlaylist.images[0].url} alt="" />
             <div className="sidebar-playlist-info-text">
               <h2>{currentPlaylist.name}</h2>
-              <p>{`${currentPlaylist.tracks.items.length} tracks`}</p>
+              <p>{`${currentPlaylist.tracks.total} tracks`}</p>
             </div>
           </div>
         }
